@@ -58,13 +58,18 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const addProject = async (project: Omit<Project, 'id'>) => {
     try {
+      console.log('Attempting to create project:', project);
       const { data, error } = await supabase
         .from('projects')
         .insert([project])
         .select()
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+      console.log('Project created successfully:', data);
       await loadProjects();
       setSelectedProject(data);
     } catch (error) {

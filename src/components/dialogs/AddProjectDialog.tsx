@@ -60,9 +60,10 @@ const AddProjectDialog = () => {
         end_date: ''
       });
     } catch (error) {
+      console.error('Project creation error:', error);
       toast({
         title: "Error",
-        description: "Failed to create project. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to create project. Please try again.",
         variant: "destructive",
       });
     } finally {
