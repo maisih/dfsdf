@@ -5,6 +5,7 @@ import ProjectProgress from "@/components/dashboard/ProjectProgress";
 import RecentActivity from "@/components/dashboard/RecentActivity";
 import { Building2, Users, Clock, AlertTriangle, TrendingUp, CheckCircle } from "lucide-react";
 import constructionHero from "@/assets/construction-hero.jpg";
+import WeatherWidget from "@/components/weather/WeatherWidget";
 
 const Index = () => {
   return (
@@ -81,9 +82,10 @@ const Index = () => {
           </div>
 
           {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <ProjectProgress />
             <RecentActivity />
+            <WeatherWidget />
           </div>
 
           {/* Additional Stats */}

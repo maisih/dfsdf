@@ -5,6 +5,8 @@ import { Progress } from "@/components/ui/progress";
 import { Plus, MapPin, Calendar, DollarSign } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
+import AddProjectDialog from "@/components/dialogs/AddProjectDialog";
+import { useProject } from "@/contexts/ProjectContext";
 
 const projects = [
   {
@@ -58,6 +60,8 @@ const projects = [
 ];
 
 const Projects = () => {
+  const { projects } = useProject();
+  
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Ahead":
@@ -80,10 +84,7 @@ const Projects = () => {
               <h1 className="text-3xl font-bold text-foreground">Projects</h1>
               <p className="text-muted-foreground">Manage all construction projects</p>
             </div>
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              New Project
-            </Button>
+            <AddProjectDialog />
           </div>
 
           <div className="grid gap-6">
@@ -96,16 +97,16 @@ const Projects = () => {
                       <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
                           <MapPin className="h-4 w-4" />
-                          {project.location}
+                          {project.location || 'No location'}
                         </div>
                         <div className="flex items-center gap-1">
                           <Calendar className="h-4 w-4" />
-                          {project.startDate} - {project.endDate}
+                          {project.start_date} - {project.end_date}
                         </div>
                       </div>
                     </div>
-                    <Badge variant="outline" className={getStatusColor(project.status)}>
-                      {project.status}
+                    <Badge variant="outline" className={getStatusColor(project.status || 'planning')}>
+                      {project.status || 'Planning'}
                     </Badge>
                   </div>
                 </CardHeader>
@@ -114,9 +115,9 @@ const Projects = () => {
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Progress</span>
-                        <span className="font-medium">{project.progress}%</span>
+                        <span className="font-medium">{project.progress || 0}%</span>
                       </div>
-                      <Progress value={project.progress} className="h-2" />
+                      <Progress value={project.progress || 0} className="h-2" />
                     </div>
                     
                     <div className="space-y-2">
@@ -127,18 +128,18 @@ const Projects = () => {
                       <div className="text-sm">
                         <div className="flex justify-between">
                           <span>Budget:</span>
-                          <span className="font-medium">{project.budget}</span>
+                          <span className="font-medium">{project.budget ? `${project.budget.toLocaleString()} MAD` : 'Not set'}</span>
                         </div>
                         <div className="flex justify-between">
                           <span>Spent:</span>
-                          <span className="font-medium">{project.spent}</span>
+                          <span className="font-medium">{project.spent ? `${project.spent.toLocaleString()} MAD` : '0 MAD'}</span>
                         </div>
                       </div>
                     </div>
 
                     <div className="space-y-2">
                       <div className="text-sm text-muted-foreground">Project Manager</div>
-                      <div className="font-medium">{project.manager}</div>
+                      <div className="font-medium">{project.created_by || 'Unassigned'}</div>
                       <div className="flex gap-2">
                         <Button variant="outline" size="sm">View Details</Button>
                         <Button variant="outline" size="sm">Edit</Button>

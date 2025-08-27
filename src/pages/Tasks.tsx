@@ -5,6 +5,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Clock, User, AlertCircle } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
+import AddTaskDialog from "@/components/dialogs/AddTaskDialog";
+import { useProject } from "@/contexts/ProjectContext";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const tasks = [
   {
@@ -54,6 +58,35 @@ const tasks = [
 ];
 
 const Tasks = () => {
+  const { selectedProject } = useProject();
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (selectedProject) {
+      loadTasks();
+    }
+  }, [selectedProject]);
+
+  const loadTasks = async () => {
+    if (!selectedProject) return;
+    
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('project_id', selectedProject.id)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      setTasks(data || []);
+    } catch (error) {
+      console.error('Error loading tasks:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Completed":
@@ -89,14 +122,24 @@ const Tasks = () => {
               <h1 className="text-3xl font-bold text-foreground">Tasks</h1>
               <p className="text-muted-foreground">Manage project tasks and assignments</p>
             </div>
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              New Task
-            </Button>
+            <AddTaskDialog />
           </div>
 
-          <div className="grid gap-4">
-            {tasks.map((task) => (
+          {!selectedProject ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Please select a project to view tasks</p>
+            </div>
+          ) : loading ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Loading tasks...</p>
+            </div>
+          ) : tasks.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">No tasks found for this project</p>
+            </div>
+          ) : (
+            <div className="grid gap-4">
+              {tasks.map((task) => (
               <Card key={task.id} className={`shadow-soft hover:shadow-medium transition-all duration-300 ${task.completed ? 'opacity-75' : ''}`}>
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4">
@@ -123,20 +166,20 @@ const Tasks = () => {
                       <p className="text-sm text-muted-foreground mb-3">{task.description}</p>
                       
                       <div className="flex items-center gap-6 text-sm text-muted-foreground mb-4">
-                        <span className="font-medium text-foreground">{task.project}</span>
+                        <span className="font-medium text-foreground">{selectedProject.name}</span>
                         
                         <div className="flex items-center gap-1">
                           <User className="h-4 w-4" />
-                          {task.assignee}
+                          {task.assigned_to || 'Unassigned'}
                         </div>
                         
                         <div className="flex items-center gap-1">
                           <Clock className="h-4 w-4" />
-                          Due: {task.dueDate}
+                          Due: {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No due date'}
                         </div>
                       </div>
                       
-                      {task.status === "Overdue" && (
+                      {task.status === "overdue" && (
                         <div className="flex items-center gap-2 text-sm text-destructive mb-3">
                           <AlertCircle className="h-4 w-4" />
                           <span>This task is overdue and requires immediate attention</span>
@@ -152,8 +195,9 @@ const Tasks = () => {
                   </div>
                 </CardContent>
               </Card>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </main>
       </div>
     </div>

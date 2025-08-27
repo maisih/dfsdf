@@ -9,15 +9,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import ProjectSelector from "@/components/project/ProjectSelector";
 
 const Header = () => {
   return (
     <header className="h-16 bg-gradient-surface border-b border-border px-6 flex items-center justify-between shadow-soft">
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-6">
         <div className="flex items-center gap-2">
           <Building2 className="h-8 w-8 text-primary" />
           <h1 className="text-xl font-bold text-foreground">SiteFlow Master</h1>
         </div>
+        <ProjectSelector />
       </div>
 
       <div className="flex items-center gap-4">
