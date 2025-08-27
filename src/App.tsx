@@ -29,28 +29,28 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/projects" element={<Projects />} />
-          <Route path="/schedule" element={<Schedule />} />
-          <Route path="/tasks" element={<Tasks />} />
-          <Route path="/logs" element={<DailyLogs />} />
-          <Route path="/timesheets" element={<Timesheets />} />
-          <Route path="/materials" element={<Materials />} />
-          <Route path="/equipment" element={<Equipment />} />
-          <Route path="/rfis" element={<RFIs />} />
-          <Route path="/photos" element={<Photos />} />
-          <Route path="/budget" element={<Budget />} />
-          <Route path="/reports" element={<Reports />} />
-          <Route path="/quality" element={<Quality />} />
-          <Route path="/documents" element={<Documents />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </ProjectProvider>
-</QueryClientProvider>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/projects" element={<Projects />} />
+            <Route path="/schedule" element={<Schedule />} />
+            <Route path="/tasks" element={<Tasks />} />
+            <Route path="/logs" element={<DailyLogs />} />
+            <Route path="/timesheets" element={<Timesheets />} />
+            <Route path="/materials" element={<Materials />} />
+            <Route path="/equipment" element={<Equipment />} />
+            <Route path="/rfis" element={<RFIs />} />
+            <Route path="/photos" element={<Photos />} />
+            <Route path="/budget" element={<Budget />} />
+            <Route path="/reports" element={<Reports />} />
+            <Route path="/quality" element={<Quality />} />
+            <Route path="/documents" element={<Documents />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </ProjectProvider>
+  </QueryClientProvider>
 );
 
 export default App;
