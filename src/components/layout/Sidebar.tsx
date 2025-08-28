@@ -49,11 +49,6 @@ const navigation = [
     href: "/logs",
   },
   {
-    name: "Timesheets",
-    icon: Clock,
-    href: "/timesheets",
-  },
-  {
     name: "Materials",
     icon: Package,
     href: "/materials",

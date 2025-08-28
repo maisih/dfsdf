@@ -9,7 +9,7 @@ import Projects from "./pages/Projects";
 import Schedule from "./pages/Schedule";
 import Tasks from "./pages/Tasks";
 import DailyLogs from "./pages/DailyLogs";
-import Timesheets from "./pages/Timesheets";
+
 import Materials from "./pages/Materials";
 import Equipment from "./pages/Equipment";
 import RFIs from "./pages/RFIs";
@@ -35,7 +35,7 @@ const App = () => (
             <Route path="/schedule" element={<Schedule />} />
             <Route path="/tasks" element={<Tasks />} />
             <Route path="/logs" element={<DailyLogs />} />
-            <Route path="/timesheets" element={<Timesheets />} />
+            
             <Route path="/materials" element={<Materials />} />
             <Route path="/equipment" element={<Equipment />} />
             <Route path="/rfis" element={<RFIs />} />
