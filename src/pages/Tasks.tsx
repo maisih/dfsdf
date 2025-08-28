@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, DollarSign, TrendingUp, Target, Calendar } from "lucide-react";
+import { Plus, Clock, User, DollarSign, Calendar } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
 import AddTaskDialog from "@/components/dialogs/AddTaskDialog";
@@ -86,8 +86,8 @@ const Tasks = () => {
         <main className="flex-1 p-6">
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h1 className="text-3xl font-bold text-foreground">Fund Requests</h1>
-              <p className="text-muted-foreground">Manage funding requests for project progress</p>
+              <h1 className="text-3xl font-bold text-foreground">Tasks & Costs</h1>
+              <p className="text-muted-foreground">Track construction tasks and their associated costs</p>
             </div>
             <AddTaskDialog />
           </div>
@@ -102,7 +102,7 @@ const Tasks = () => {
             </div>
           ) : tasks.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-muted-foreground">No fund requests found for this project</p>
+              <p className="text-muted-foreground">No tasks found for this project</p>
             </div>
           ) : (
             <div className="grid gap-4">
@@ -133,26 +133,30 @@ const Tasks = () => {
                       <p className="text-sm text-muted-foreground mb-3">{task.description}</p>
                       
                        <div className="flex items-center gap-6 text-sm text-muted-foreground mb-4">
+                         <span className="font-medium text-foreground">{selectedProject.name}</span>
+                         
+                         <div className="flex items-center gap-1">
+                           <User className="h-4 w-4" />
+                           {task.assigned_to || 'Unassigned'}
+                         </div>
+                         
+                         <div className="flex items-center gap-1">
+                           <Clock className="h-4 w-4" />
+                           Due: {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No due date'}
+                         </div>
+                         
                          <div className="flex items-center gap-1">
                            <DollarSign className="h-4 w-4" />
-                           <span className="font-medium text-foreground">Funding Request</span>
-                         </div>
-                         
-                         <div className="flex items-center gap-1">
-                           <Target className="h-4 w-4" />
-                           {task.assigned_to || 'Pending Approval'}
-                         </div>
-                         
-                         <div className="flex items-center gap-1">
-                           <Calendar className="h-4 w-4" />
-                           Due: {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No due date'}
+                           <span className="font-medium text-primary">
+                             Cost: {task.cost ? `${task.cost} MAD` : 'No cost set'}
+                           </span>
                          </div>
                        </div>
                       
                        <div className="flex gap-2">
-                         <Button variant="outline" size="sm">Approve</Button>
-                         <Button variant="outline" size="sm">Review</Button>
-                         <Button variant="outline" size="sm">Request Info</Button>
+                         <Button variant="outline" size="sm">Edit</Button>
+                         <Button variant="outline" size="sm">Comments</Button>
+                         <Button variant="outline" size="sm">Update Cost</Button>
                        </div>
                     </div>
                   </div>
