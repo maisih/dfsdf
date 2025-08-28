@@ -6,6 +6,7 @@ import { Plus, MapPin, Calendar, DollarSign } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
 import AddProjectDialog from "@/components/dialogs/AddProjectDialog";
+import EditProjectDialog from "@/components/dialogs/EditProjectDialog";
 import { useProject } from "@/contexts/ProjectContext";
 
 const projects = [
@@ -142,7 +143,7 @@ const Projects = () => {
                       <div className="font-medium">{project.created_by || 'Unassigned'}</div>
                       <div className="flex gap-2">
                         <Button variant="outline" size="sm">View Details</Button>
-                        <Button variant="outline" size="sm">Edit</Button>
+                        <EditProjectDialog project={project} />
                       </div>
                     </div>
                   </div>

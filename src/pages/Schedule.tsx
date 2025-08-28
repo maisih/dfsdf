@@ -1,21 +1,23 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Plus, Clock, MapPin, Users } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Calendar as CalendarIcon, Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
 import AddEventDialog from "@/components/dialogs/AddEventDialog";
 import { useProject } from "@/contexts/ProjectContext";
-import { useEffect, useState } from "react";
-import { format } from "date-fns";
+import { useState } from "react";
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths } from "date-fns";
 
 const Schedule = () => {
   const { selectedProject } = useProject();
   const [events, setEvents] = useState<any[]>([]);
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [currentDate, setCurrentDate] = useState(new Date());
 
   const handleEventAdded = (newEvent: any) => {
-    setEvents([...events, newEvent]);
+    setEvents([...events, { ...newEvent, id: Date.now() }]);
   };
 
   const getEventTypeColor = (type: string) => {
@@ -37,13 +39,21 @@ const Schedule = () => {
     }
   };
 
-  const isEventUpcoming = (eventDate: string) => {
-    const today = new Date();
-    const event = new Date(eventDate);
-    return event >= today;
+  const monthStart = startOfMonth(currentDate);
+  const monthEnd = endOfMonth(currentDate);
+  const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
+
+  const getEventsForDay = (day: Date) => {
+    return events.filter(event => isSameDay(new Date(event.date), day));
   };
 
-  const sortedEvents = events.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  const navigateMonth = (direction: 'prev' | 'next') => {
+    if (direction === 'prev') {
+      setCurrentDate(subMonths(currentDate, 1));
+    } else {
+      setCurrentDate(addMonths(currentDate, 1));
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -54,162 +64,136 @@ const Schedule = () => {
           <div className="flex justify-between items-center mb-6">
             <div>
               <h1 className="text-3xl font-bold text-foreground">Project Schedule</h1>
-              <p className="text-muted-foreground">Manage upcoming events and project timeline</p>
+              <p className="text-muted-foreground">Monthly calendar view with project events</p>
             </div>
             <Button className="gap-2" onClick={() => setShowAddDialog(true)}>
               <Plus className="h-4 w-4" />
-              Schedule Event
+              Add Event
             </Button>
           </div>
 
           {!selectedProject ? (
             <div className="text-center py-12">
-              <Calendar className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+              <CalendarIcon className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
               <h2 className="text-xl font-semibold text-foreground mb-2">No Project Selected</h2>
-              <p className="text-muted-foreground">Please select a project to manage the schedule</p>
+              <p className="text-muted-foreground">Please select a project to view the schedule</p>
             </div>
           ) : (
-            <div className="grid gap-6">
-              {/* Project Timeline Overview */}
+            <div className="space-y-6">
+              {/* Calendar Header */}
               <Card className="shadow-soft">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Calendar className="h-5 w-5" />
-                    {selectedProject.name} - Timeline
-                  </CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <CalendarIcon className="h-5 w-5" />
+                      {format(currentDate, 'MMMM yyyy')}
+                    </CardTitle>
+                    <div className="flex items-center gap-2">
+                      <Button variant="outline" size="sm" onClick={() => navigateMonth('prev')}>
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => setCurrentDate(new Date())}>
+                        Today
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => navigateMonth('next')}>
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="text-center">
-                      <div className="text-sm text-muted-foreground">Start Date</div>
-                      <div className="text-lg font-semibold text-foreground">
-                        {selectedProject.start_date 
-                          ? format(new Date(selectedProject.start_date), 'MMM dd, yyyy')
-                          : 'Not set'
-                        }
+                  {/* Calendar Grid */}
+                  <div className="grid grid-cols-7 gap-px bg-border rounded-lg overflow-hidden">
+                    {/* Day headers */}
+                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+                      <div key={day} className="bg-muted/20 p-3 text-center text-sm font-medium text-muted-foreground">
+                        {day}
                       </div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-sm text-muted-foreground">End Date</div>
-                      <div className="text-lg font-semibold text-foreground">
-                        {selectedProject.end_date 
-                          ? format(new Date(selectedProject.end_date), 'MMM dd, yyyy')
-                          : 'Not set'
-                        }
-                      </div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-sm text-muted-foreground">Progress</div>
-                      <div className="text-lg font-semibold text-foreground">
-                        {selectedProject.progress || 0}%
-                      </div>
-                    </div>
+                    ))}
+                    
+                    {/* Calendar days */}
+                    {daysInMonth.map((day) => {
+                      const dayEvents = getEventsForDay(day);
+                      const isToday = isSameDay(day, new Date());
+                      
+                      return (
+                        <div key={day.toISOString()} className="bg-background min-h-[120px] p-2">
+                          <div className={`text-sm font-medium mb-1 ${isToday ? 'text-primary font-bold' : 'text-foreground'}`}>
+                            {format(day, 'd')}
+                          </div>
+                          <div className="space-y-1">
+                            {dayEvents.slice(0, 3).map((event, index) => (
+                              <div key={index} className="text-xs p-1 rounded text-white bg-primary/80 truncate">
+                                {event.title}
+                              </div>
+                            ))}
+                            {dayEvents.length > 3 && (
+                              <div className="text-xs text-muted-foreground">
+                                +{dayEvents.length - 3} more
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Upcoming Events */}
+              {/* Upcoming Events Summary */}
               <Card className="shadow-soft">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Clock className="h-5 w-5" />
-                    Upcoming Events
+                    <CalendarIcon className="h-5 w-5" />
+                    This Month Events
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   {events.length === 0 ? (
-                    <div className="text-center py-12">
-                      <Clock className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <div className="text-center py-8">
+                      <CalendarIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                       <h3 className="text-lg font-semibold text-foreground mb-2">No Events Scheduled</h3>
-                      <p className="text-muted-foreground mb-4">Schedule your first event to get started</p>
-                      <Button className="gap-2" onClick={() => setShowAddDialog(true)}>
-                        <Plus className="h-4 w-4" />
-                        Schedule Event
+                      <p className="text-muted-foreground mb-4">Add your first event to get started</p>
+                      <Button onClick={() => setShowAddDialog(true)}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Event
                       </Button>
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {sortedEvents.map((event) => (
-                        <div key={event.id} className="flex items-center justify-between p-4 bg-muted/20 rounded-lg">
-                          <div className="flex items-center gap-4">
-                            <div className="text-center">
-                              <div className="text-sm font-semibold text-foreground">
-                                {format(new Date(event.date), 'MMM')}
-                              </div>
-                              <div className="text-lg font-bold text-primary">
-                                {format(new Date(event.date), 'dd')}
-                              </div>
+                      {events.slice(0, 5).map((event) => (
+                        <div key={event.id} className="flex items-center gap-4 p-3 bg-muted/20 rounded-lg">
+                          <div className="text-center min-w-[60px]">
+                            <div className="text-lg font-bold text-primary">
+                              {format(new Date(event.date), 'dd')}
                             </div>
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <h4 className="font-medium text-foreground">{event.title}</h4>
-                                <Badge variant="outline" className={getEventTypeColor(event.type)}>
-                                  {event.type}
-                                </Badge>
-                              </div>
-                              <p className="text-sm text-muted-foreground">{event.description}</p>
-                              <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                                <div className="flex items-center gap-1">
-                                  <Clock className="h-3 w-3" />
-                                  {event.time}
-                                </div>
-                                <div className="flex items-center gap-1">
-                                  <Calendar className="h-3 w-3" />
-                                  {format(new Date(event.date), 'EEEE, MMM dd, yyyy')}
-                                </div>
-                              </div>
+                            <div className="text-xs text-muted-foreground uppercase">
+                              {format(new Date(event.date), 'MMM')}
                             </div>
                           </div>
-                          <div className="text-right">
-                            <Badge 
-                              variant={isEventUpcoming(event.date) ? "default" : "secondary"}
-                              className="text-xs"
-                            >
-                              {isEventUpcoming(event.date) ? "Upcoming" : "Past"}
-                            </Badge>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className="font-medium text-foreground">{event.title}</h4>
+                              <Badge variant="outline" className={getEventTypeColor(event.type)}>
+                                {event.type}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground">{event.description}</p>
+                            {event.time && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Time: {event.time}
+                              </p>
+                            )}
                           </div>
                         </div>
                       ))}
+                      {events.length > 5 && (
+                        <div className="text-center text-sm text-muted-foreground">
+                          And {events.length - 5} more events this month...
+                        </div>
+                      )}
                     </div>
                   )}
-                </CardContent>
-              </Card>
-
-              {/* Period Summary */}
-              <Card className="shadow-soft">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Calendar className="h-5 w-5" />
-                    This Month Summary
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
-                    <div>
-                      <div className="text-2xl font-bold text-primary">
-                        {events.filter(e => isEventUpcoming(e.date)).length}
-                      </div>
-                      <div className="text-sm text-muted-foreground">Upcoming Events</div>
-                    </div>
-                    <div>
-                      <div className="text-2xl font-bold text-foreground">
-                        {events.filter(e => e.type === 'Meeting').length}
-                      </div>
-                      <div className="text-sm text-muted-foreground">Meetings</div>
-                    </div>
-                    <div>
-                      <div className="text-2xl font-bold text-foreground">
-                        {events.filter(e => e.type === 'Milestone').length}
-                      </div>
-                      <div className="text-sm text-muted-foreground">Milestones</div>
-                    </div>
-                    <div>
-                      <div className="text-2xl font-bold text-foreground">
-                        {events.filter(e => e.type === 'Inspection').length}
-                      </div>
-                      <div className="text-sm text-muted-foreground">Inspections</div>
-                    </div>
-                  </div>
                 </CardContent>
               </Card>
             </div>

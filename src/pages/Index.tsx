@@ -76,7 +76,19 @@ const Index = () => {
         .select('amount')
         .eq('project_id', selectedProject.id);
 
-      const totalSpent = expensesData?.reduce((sum, expense) => sum + (expense.amount || 0), 0) || 0;
+      // Load materials cost for budget calculation
+      const { data: materialsData } = await supabase
+        .from('materials')
+        .select('quantity, unit_cost')
+        .eq('project_id', selectedProject.id);
+
+      const totalExpenses = expensesData?.reduce((sum, expense) => sum + (expense.amount || 0), 0) || 0;
+      const totalMaterialsCost = materialsData?.reduce((sum, material) => {
+        const materialCost = (material.quantity || 0) * (material.unit_cost || 0);
+        return sum + materialCost;
+      }, 0) || 0;
+      
+      const totalSpent = totalExpenses + totalMaterialsCost;
       const budgetUtilization = selectedProject.budget > 0 ? Math.round((totalSpent / selectedProject.budget) * 100) : 0;
 
       setStats({
