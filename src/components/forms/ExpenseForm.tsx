@@ -47,7 +47,7 @@ const ExpenseForm = () => {
           ...formData,
           amount: parseFloat(formData.amount),
           project_id: selectedProject.id,
-          recorded_by: '00000000-0000-0000-0000-000000000000' // Temporary until auth
+          recorded_by: null // Set to null until authentication is implemented
         }]);
       
       if (error) throw error;

@@ -42,10 +42,10 @@ const AddTaskDialog = () => {
         .from('tasks')
         .insert([{
           ...formData,
-          project_id: selectedProject.id,
-          priority: parseInt(formData.priority),
-          created_by: '00000000-0000-0000-0000-000000000000', // Temporary until auth is implemented
-          status: 'pending'
+        project_id: selectedProject.id,
+        priority: parseInt(formData.priority),
+        created_by: null, // Set to null until authentication is implemented
+        status: 'pending'
         }]);
       
       if (error) throw error;

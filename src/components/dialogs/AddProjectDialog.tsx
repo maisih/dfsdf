@@ -43,7 +43,7 @@ const AddProjectDialog = () => {
         spent: 0,
         progress: 0,
         status: 'planning' as const,
-        created_by: '00000000-0000-0000-0000-000000000000' // Temporary until auth is implemented
+        created_by: null // Set to null until authentication is implemented
       });
       
       console.log('🎉 Project creation initiated successfully');
