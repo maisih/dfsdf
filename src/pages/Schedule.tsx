@@ -1,80 +1,101 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, Users, AlertTriangle } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
+import { Calendar, DollarSign, TrendingUp, Target } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
-
-const scheduleItems = [
-  {
-    id: 1,
-    task: "Foundation Excavation",
-    project: "Downtown Office Complex",
-    startDate: "Nov 25, 2024",
-    endDate: "Nov 30, 2024",
-    duration: "5 days",
-    assigned: "Alpha Construction Crew",
-    status: "In Progress",
-    priority: "High"
-  },
-  {
-    id: 2,
-    task: "Structural Steel Installation",
-    project: "Residential Tower Phase 2",
-    startDate: "Dec 1, 2024",
-    endDate: "Dec 15, 2024",
-    duration: "14 days",
-    assigned: "Steel Works Team",
-    status: "Scheduled",
-    priority: "Medium"
-  },
-  {
-    id: 3,
-    task: "Electrical Rough-in",
-    project: "Industrial Warehouse",
-    startDate: "Nov 28, 2024",
-    endDate: "Dec 5, 2024",
-    duration: "7 days",
-    assigned: "Power Systems Inc",
-    status: "At Risk",
-    priority: "High"
-  },
-  {
-    id: 4,
-    task: "Interior Finishing",
-    project: "Shopping Center Renovation",
-    startDate: "Dec 10, 2024",
-    endDate: "Dec 20, 2024",
-    duration: "10 days",
-    assigned: "Finish Masters",
-    status: "Scheduled",
-    priority: "Low"
-  }
-];
+import { useProject } from "@/contexts/ProjectContext";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const Schedule = () => {
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "In Progress":
-        return "bg-primary/10 text-primary border-primary/20";
-      case "At Risk":
-        return "bg-destructive/10 text-destructive border-destructive/20";
-      case "Completed":
-        return "bg-success/10 text-success border-success/20";
-      default:
-        return "bg-muted/10 text-muted-foreground border-muted/20";
+  const { selectedProject, loadProjects } = useProject();
+  const [budgetUsed, setBudgetUsed] = useState(0);
+  const [progressPercentage, setProgressPercentage] = useState(0);
+  const [newProgress, setNewProgress] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (selectedProject) {
+      calculateProgress();
+    }
+  }, [selectedProject]);
+
+  const calculateProgress = async () => {
+    if (!selectedProject || !selectedProject.budget) return;
+
+    try {
+      // Get total expenses for this project
+      const { data: expenses, error } = await supabase
+        .from('expenses')
+        .select('amount')
+        .eq('project_id', selectedProject.id);
+
+      if (error) throw error;
+
+      const totalSpent = expenses?.reduce((sum, expense) => sum + (expense.amount || 0), 0) || 0;
+      setBudgetUsed(totalSpent);
+      
+      // Calculate progress percentage based on budget usage
+      const percentage = selectedProject.budget > 0 ? Math.min((totalSpent / selectedProject.budget) * 100, 100) : 0;
+      setProgressPercentage(Math.round(percentage));
+    } catch (error) {
+      console.error('Error calculating progress:', error);
     }
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "High":
-        return "bg-destructive/10 text-destructive border-destructive/20";
-      case "Medium":
-        return "bg-warning/10 text-warning border-warning/20";
-      default:
-        return "bg-muted/10 text-muted-foreground border-muted/20";
+  const updateProjectProgress = async () => {
+    if (!selectedProject || !newProgress) return;
+
+    setIsLoading(true);
+    try {
+      const progressValue = parseInt(newProgress);
+      
+      const { error } = await supabase
+        .from('projects')
+        .update({ 
+          progress: progressValue,
+          spent: budgetUsed
+        })
+        .eq('id', selectedProject.id);
+
+      if (error) throw error;
+
+      await loadProjects();
+      
+      toast({
+        title: "Progress Updated",
+        description: `Project progress updated to ${progressValue}%`,
+      });
+      
+      setNewProgress('');
+    } catch (error) {
+      console.error('Error updating progress:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update project progress.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  const getProgressColor = (percentage: number) => {
+    if (percentage < 30) return "bg-success";
+    if (percentage < 70) return "bg-warning";
+    return "bg-destructive";
+  };
+
+  const getStatusText = (percentage: number) => {
+    if (percentage < 25) return "On Track";
+    if (percentage < 50) return "Progressing";
+    if (percentage < 75) return "Advanced";
+    return "Near Completion";
   };
 
   return (
@@ -85,80 +106,177 @@ const Schedule = () => {
         <main className="flex-1 p-6">
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h1 className="text-3xl font-bold text-foreground">Schedule</h1>
-              <p className="text-muted-foreground">Project timeline and task scheduling</p>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline">Today</Button>
-              <Button variant="outline">This Week</Button>
-              <Button>This Month</Button>
+              <h1 className="text-3xl font-bold text-foreground">Project Progress</h1>
+              <p className="text-muted-foreground">Track project progress based on budget utilization</p>
             </div>
           </div>
 
-          <div className="grid gap-4">
-            {scheduleItems.map((item) => (
-              <Card key={item.id} className="shadow-soft hover:shadow-medium transition-all duration-300">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-lg font-semibold text-foreground">{item.task}</h3>
-                        <Badge variant="outline" className={getStatusColor(item.status)}>
-                          {item.status}
-                        </Badge>
-                        <Badge variant="outline" className={getPriorityColor(item.priority)}>
-                          {item.priority}
-                        </Badge>
-                      </div>
-                      
-                      <p className="text-sm text-muted-foreground mb-4">{item.project}</p>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="flex items-center gap-2 text-sm">
-                          <Calendar className="h-4 w-4 text-primary" />
-                          <span className="text-muted-foreground">Start:</span>
-                          <span className="font-medium">{item.startDate}</span>
-                        </div>
-                        
-                        <div className="flex items-center gap-2 text-sm">
-                          <Calendar className="h-4 w-4 text-primary" />
-                          <span className="text-muted-foreground">End:</span>
-                          <span className="font-medium">{item.endDate}</span>
-                        </div>
-                        
-                        <div className="flex items-center gap-2 text-sm">
-                          <Clock className="h-4 w-4 text-primary" />
-                          <span className="text-muted-foreground">Duration:</span>
-                          <span className="font-medium">{item.duration}</span>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-2 text-sm mt-3">
-                        <Users className="h-4 w-4 text-primary" />
-                        <span className="text-muted-foreground">Assigned to:</span>
-                        <span className="font-medium">{item.assigned}</span>
-                      </div>
+          {!selectedProject ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Please select a project to view progress</p>
+            </div>
+          ) : (
+            <div className="grid gap-6">
+              {/* Project Overview Card */}
+              <Card className="shadow-soft">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Calendar className="h-5 w-5" />
+                    {selectedProject.name}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-primary">{progressPercentage}%</div>
+                      <p className="text-sm text-muted-foreground">Budget Used</p>
                     </div>
-                    
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm">Edit</Button>
-                      <Button variant="outline" size="sm">Details</Button>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-foreground">
+                        {selectedProject.progress || 0}%
+                      </div>
+                      <p className="text-sm text-muted-foreground">Project Progress</p>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-medium text-muted-foreground">
+                        {getStatusText(selectedProject.progress || 0)}
+                      </div>
+                      <p className="text-sm text-muted-foreground">Status</p>
                     </div>
                   </div>
-                  
-                  {item.status === "At Risk" && (
-                    <div className="mt-4 p-3 bg-destructive/5 border border-destructive/20 rounded-lg">
-                      <div className="flex items-center gap-2 text-sm text-destructive">
-                        <AlertTriangle className="h-4 w-4" />
-                        <span className="font-medium">Risk Alert:</span>
-                        <span>Task may be delayed due to material delivery issues</span>
-                      </div>
+
+                  <div className="space-y-3">
+                    <div className="flex justify-between text-sm">
+                      <span>Project Progress</span>
+                      <span>{selectedProject.progress || 0}%</span>
                     </div>
-                  )}
+                    <Progress 
+                      value={selectedProject.progress || 0} 
+                      className="h-3" 
+                    />
+                  </div>
                 </CardContent>
               </Card>
-            ))}
-          </div>
+
+              {/* Budget Analysis Card */}
+              <Card className="shadow-soft">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <DollarSign className="h-5 w-5" />
+                    Budget Analysis
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Total Budget:</span>
+                        <span className="font-semibold">
+                          {selectedProject.budget?.toLocaleString() || '0'} MAD
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Amount Spent:</span>
+                        <span className="font-semibold">
+                          {budgetUsed.toLocaleString()} MAD
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Remaining:</span>
+                        <span className="font-semibold">
+                          {selectedProject.budget 
+                            ? (selectedProject.budget - budgetUsed).toLocaleString()
+                            : '0'
+                          } MAD
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex justify-between text-sm">
+                        <span>Budget Utilization</span>
+                        <span>{progressPercentage}%</span>
+                      </div>
+                      <Progress 
+                        value={progressPercentage} 
+                        className={`h-3 ${getProgressColor(progressPercentage)}`}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Based on recorded expenses
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Update Progress Card */}
+              <Card className="shadow-soft">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Target className="h-5 w-5" />
+                    Update Project Progress
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex gap-4 items-end">
+                    <div className="flex-1">
+                      <Label htmlFor="progress">Progress Percentage (0-100)</Label>
+                      <Input
+                        id="progress"
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={newProgress}
+                        onChange={(e) => setNewProgress(e.target.value)}
+                        placeholder="Enter progress percentage"
+                      />
+                    </div>
+                    <Button 
+                      onClick={updateProjectProgress}
+                      disabled={!newProgress || isLoading}
+                    >
+                      {isLoading ? "Updating..." : "Update Progress"}
+                    </Button>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Manually set the project completion percentage
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Project Timeline */}
+              {(selectedProject.start_date || selectedProject.end_date) && (
+                <Card className="shadow-soft">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Calendar className="h-5 w-5" />
+                      Project Timeline
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {selectedProject.start_date && (
+                        <div>
+                          <span className="text-sm text-muted-foreground">Start Date:</span>
+                          <p className="font-medium">
+                            {new Date(selectedProject.start_date).toLocaleDateString()}
+                          </p>
+                        </div>
+                      )}
+                      {selectedProject.end_date && (
+                        <div>
+                          <span className="text-sm text-muted-foreground">End Date:</span>
+                          <p className="font-medium">
+                            {new Date(selectedProject.end_date).toLocaleDateString()}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
         </main>
       </div>
     </div>

@@ -12,11 +12,8 @@ import DailyLogs from "./pages/DailyLogs";
 
 import Materials from "./pages/Materials";
 import Equipment from "./pages/Equipment";
-import RFIs from "./pages/RFIs";
-import Photos from "./pages/Photos";
 import Budget from "./pages/Budget";
 import Reports from "./pages/Reports";
-import Quality from "./pages/Quality";
 import Documents from "./pages/Documents";
 import NotFound from "./pages/NotFound";
 
@@ -38,11 +35,8 @@ const App = () => (
             
             <Route path="/materials" element={<Materials />} />
             <Route path="/equipment" element={<Equipment />} />
-            <Route path="/rfis" element={<RFIs />} />
-            <Route path="/photos" element={<Photos />} />
             <Route path="/budget" element={<Budget />} />
             <Route path="/reports" element={<Reports />} />
-            <Route path="/quality" element={<Quality />} />
             <Route path="/documents" element={<Documents />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

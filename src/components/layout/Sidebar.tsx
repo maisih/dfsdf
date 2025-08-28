@@ -5,14 +5,10 @@ import {
   Calendar,
   CheckSquare,
   ClipboardList,
-  Clock,
   Package,
   Wrench,
-  MessageCircle,
-  Camera,
   DollarSign,
   BarChart3,
-  Shield,
   FileText
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -59,16 +55,6 @@ const navigation = [
     href: "/equipment",
   },
   {
-    name: "RFIs",
-    icon: MessageCircle,
-    href: "/rfis",
-  },
-  {
-    name: "Photos",
-    icon: Camera,
-    href: "/photos",
-  },
-  {
     name: "Budget",
     icon: DollarSign,
     href: "/budget",
@@ -77,11 +63,6 @@ const navigation = [
     name: "Reports",
     icon: BarChart3,
     href: "/reports",
-  },
-  {
-    name: "Quality",
-    icon: Shield,
-    href: "/quality",
   },
   {
     name: "Documents",

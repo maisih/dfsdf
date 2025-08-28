@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, FileText, Camera, AlertTriangle, Calendar, DollarSign } from "lucide-react";
+import { Plus, Calendar, FileText, DollarSign } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AddProjectDialog from "@/components/dialogs/AddProjectDialog";
 import AddTaskDialog from "@/components/dialogs/AddTaskDialog";
@@ -24,15 +24,6 @@ const QuickActions = () => {
           <Button 
             variant="outline" 
             className="gap-2 h-auto py-3"
-            onClick={() => navigate('/photos')}
-          >
-            <Camera className="h-4 w-4" />
-            Upload Photo
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            className="gap-2 h-auto py-3"
             onClick={() => navigate('/documents')}
           >
             <FileText className="h-4 w-4" />
@@ -42,19 +33,10 @@ const QuickActions = () => {
           <Button 
             variant="outline" 
             className="gap-2 h-auto py-3"
-            onClick={() => navigate('/quality')}
-          >
-            <AlertTriangle className="h-4 w-4" />
-            Report Issue
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            className="gap-2 h-auto py-3"
             onClick={() => navigate('/schedule')}
           >
             <Calendar className="h-4 w-4" />
-            View Schedule
+            View Progress
           </Button>
           
           <Button 
