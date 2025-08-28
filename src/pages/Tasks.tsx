@@ -10,53 +10,6 @@ import { useProject } from "@/contexts/ProjectContext";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-const tasks = [
-  {
-    id: 1,
-    title: "Complete concrete pour for foundation",
-    description: "Pour concrete for the east wing foundation according to specifications",
-    project: "Downtown Office Complex",
-    assignee: "John Smith",
-    priority: "High",
-    status: "In Progress",
-    dueDate: "Nov 30, 2024",
-    completed: false
-  },
-  {
-    id: 2,
-    title: "Install electrical conduits",
-    description: "Run electrical conduits through structural framework",
-    project: "Residential Tower Phase 2",
-    assignee: "Mike Johnson",
-    priority: "Medium",
-    status: "Pending",
-    dueDate: "Dec 5, 2024",
-    completed: false
-  },
-  {
-    id: 3,
-    title: "Quality inspection checkpoint",
-    description: "Conduct safety and quality inspection of completed work",
-    project: "Industrial Warehouse",
-    assignee: "Sarah Wilson",
-    priority: "High",
-    status: "Overdue",
-    dueDate: "Nov 25, 2024",
-    completed: false
-  },
-  {
-    id: 4,
-    title: "Material delivery coordination",
-    description: "Coordinate delivery of steel beams and check specifications",
-    project: "Shopping Center Renovation",
-    assignee: "Alex Brown",
-    priority: "Low",
-    status: "Completed",
-    dueDate: "Nov 20, 2024",
-    completed: true
-  }
-];
-
 const Tasks = () => {
   const { selectedProject } = useProject();
   const [tasks, setTasks] = useState<any[]>([]);
@@ -65,6 +18,8 @@ const Tasks = () => {
   useEffect(() => {
     if (selectedProject) {
       loadTasks();
+    } else {
+      setTasks([]);
     }
   }, [selectedProject]);
 
@@ -87,27 +42,39 @@ const Tasks = () => {
       setLoading(false);
     }
   };
+
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Completed":
+      case "completed":
         return "bg-success/10 text-success border-success/20";
-      case "In Progress":
+      case "in_progress":
         return "bg-primary/10 text-primary border-primary/20";
-      case "Overdue":
-        return "bg-destructive/10 text-destructive border-destructive/20";
+      case "pending":
+        return "bg-warning/10 text-warning border-warning/20";
       default:
         return "bg-muted/10 text-muted-foreground border-muted/20";
     }
   };
 
-  const getPriorityColor = (priority: string) => {
+  const getPriorityColor = (priority: number) => {
     switch (priority) {
-      case "High":
+      case 4:
+      case 3:
         return "bg-destructive/10 text-destructive border-destructive/20";
-      case "Medium":
+      case 2:
         return "bg-warning/10 text-warning border-warning/20";
       default:
         return "bg-muted/10 text-muted-foreground border-muted/20";
+    }
+  };
+
+  const getPriorityLabel = (priority: number) => {
+    switch (priority) {
+      case 4: return "Critical";
+      case 3: return "High";
+      case 2: return "Medium";
+      case 1: return "Low";
+      default: return "Unknown";
     }
   };
 
@@ -140,17 +107,17 @@ const Tasks = () => {
           ) : (
             <div className="grid gap-4">
               {tasks.map((task) => (
-              <Card key={task.id} className={`shadow-soft hover:shadow-medium transition-all duration-300 ${task.completed ? 'opacity-75' : ''}`}>
+              <Card key={task.id} className={`shadow-soft hover:shadow-medium transition-all duration-300 ${task.status === 'completed' ? 'opacity-75' : ''}`}>
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4">
                     <Checkbox 
-                      checked={task.completed}
+                      checked={task.status === 'completed'}
                       className="mt-1"
                     />
                     
                     <div className="flex-1">
                       <div className="flex items-start justify-between mb-2">
-                        <h3 className={`text-lg font-semibold ${task.completed ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
+                        <h3 className={`text-lg font-semibold ${task.status === 'completed' ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
                           {task.title}
                         </h3>
                         <div className="flex gap-2">
@@ -158,7 +125,7 @@ const Tasks = () => {
                             {task.status}
                           </Badge>
                           <Badge variant="outline" className={getPriorityColor(task.priority)}>
-                            {task.priority}
+                            {getPriorityLabel(task.priority)}
                           </Badge>
                         </div>
                       </div>
@@ -178,13 +145,6 @@ const Tasks = () => {
                           Due: {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No due date'}
                         </div>
                       </div>
-                      
-                      {task.status === "overdue" && (
-                        <div className="flex items-center gap-2 text-sm text-destructive mb-3">
-                          <AlertCircle className="h-4 w-4" />
-                          <span>This task is overdue and requires immediate attention</span>
-                        </div>
-                      )}
                       
                       <div className="flex gap-2">
                         <Button variant="outline" size="sm">Edit</Button>

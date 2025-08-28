@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      daily_logs: {
+        Row: {
+          created_at: string
+          deliveries: string | null
+          equipment_used: string | null
+          id: string
+          issues: string | null
+          laborers: number | null
+          log_date: string
+          logged_by: string | null
+          operators: number | null
+          project_id: string
+          supervisors: number | null
+          updated_at: string
+          weather: string | null
+          work_performed: string | null
+        }
+        Insert: {
+          created_at?: string
+          deliveries?: string | null
+          equipment_used?: string | null
+          id?: string
+          issues?: string | null
+          laborers?: number | null
+          log_date?: string
+          logged_by?: string | null
+          operators?: number | null
+          project_id: string
+          supervisors?: number | null
+          updated_at?: string
+          weather?: string | null
+          work_performed?: string | null
+        }
+        Update: {
+          created_at?: string
+          deliveries?: string | null
+          equipment_used?: string | null
+          id?: string
+          issues?: string | null
+          laborers?: number | null
+          log_date?: string
+          logged_by?: string | null
+          operators?: number | null
+          project_id?: string
+          supervisors?: number | null
+          updated_at?: string
+          weather?: string | null
+          work_performed?: string | null
+        }
+        Relationships: []
+      }
       documents: {
         Row: {
           created_at: string
