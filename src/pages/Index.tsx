@@ -7,6 +7,7 @@ import constructionHero from "@/assets/construction-hero.jpg";
 import { useProject } from "@/contexts/ProjectContext";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import WeatherWidget from "@/components/weather/WeatherWidget";
 
 const Index = () => {
   const { selectedProject } = useProject();
@@ -207,43 +208,48 @@ const Index = () => {
                 </Card>
               </div>
 
-              {/* Budget Breakdown */}
-              <Card className="shadow-soft">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <DollarSign className="h-5 w-5" />
-                    Budget Overview
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div>
-                      <div className="text-sm text-muted-foreground">Total Budget</div>
-                      <div className="text-2xl font-bold text-foreground">
-                        {selectedProject.budget?.toLocaleString() || '0'} MAD
+              {/* Weather and Budget Overview */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <WeatherWidget />
+                
+                {/* Budget Breakdown */}
+                <Card className="shadow-soft">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <DollarSign className="h-5 w-5" />
+                      Budget Overview
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 gap-4">
+                      <div>
+                        <div className="text-sm text-muted-foreground">Total Budget</div>
+                        <div className="text-2xl font-bold text-foreground">
+                          {selectedProject.budget?.toLocaleString() || '0'} MAD
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-muted-foreground">Spent</div>
+                        <div className="text-2xl font-bold text-foreground">
+                          {stats.totalExpenses.toLocaleString()} MAD
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-muted-foreground">Remaining</div>
+                        <div className="text-2xl font-bold text-foreground">
+                          {selectedProject.budget 
+                            ? (selectedProject.budget - stats.totalExpenses).toLocaleString()
+                            : '0'
+                          } MAD
+                        </div>
                       </div>
                     </div>
-                    <div>
-                      <div className="text-sm text-muted-foreground">Spent</div>
-                      <div className="text-2xl font-bold text-foreground">
-                        {stats.totalExpenses.toLocaleString()} MAD
-                      </div>
+                    <div className="mt-4">
+                      <Progress value={stats.budgetUtilization} className="h-3" />
                     </div>
-                    <div>
-                      <div className="text-sm text-muted-foreground">Remaining</div>
-                      <div className="text-2xl font-bold text-foreground">
-                        {selectedProject.budget 
-                          ? (selectedProject.budget - stats.totalExpenses).toLocaleString()
-                          : '0'
-                        } MAD
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mt-4">
-                    <Progress value={stats.budgetUtilization} className="h-3" />
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </div>
 
               {/* Active Tasks */}
               <Card className="shadow-soft">
