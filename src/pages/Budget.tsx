@@ -4,6 +4,10 @@ import { Progress } from "@/components/ui/progress";
 import { DollarSign, TrendingUp, TrendingDown, AlertTriangle } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
+import ExpenseForm from "@/components/forms/ExpenseForm";
+import { useProject } from "@/contexts/ProjectContext";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const budgetData = [
   {
@@ -48,6 +52,40 @@ const budgetData = [
 ];
 
 const Budget = () => {
+  const { selectedProject } = useProject();
+  const [expenses, setExpenses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (selectedProject) {
+      loadExpenses();
+    }
+  }, [selectedProject]);
+
+  const loadExpenses = async () => {
+    if (!selectedProject) return;
+    
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('expenses')
+        .select('*')
+        .eq('project_id', selectedProject.id)
+        .order('expense_date', { ascending: false });
+      
+      if (error) throw error;
+      setExpenses(data || []);
+    } catch (error) {
+      console.error('Error loading expenses:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const totalSpent = expenses.reduce((sum, expense) => sum + (expense.amount || 0), 0);
+  const budgetUtilization = selectedProject?.budget 
+    ? Math.round((totalSpent / selectedProject.budget) * 100)
+    : 0;
   const getSpentPercentage = (spent: number, budget: number) => {
     return Math.round((spent / budget) * 100);
   };
@@ -83,103 +121,110 @@ const Budget = () => {
             </div>
           </div>
 
-          <div className="grid gap-6">
-            {budgetData.map((project) => (
-              <Card key={project.id} className="shadow-soft hover:shadow-medium transition-all duration-300">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <DollarSign className="h-5 w-5 text-primary" />
-                    {project.project}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Total Budget</span>
-                        <span className="font-semibold">${project.totalBudget.toLocaleString()}</span>
+          {!selectedProject ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Please select a project to view budget details</p>
+            </div>
+          ) : (
+            <>
+              {/* Budget Overview */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <Card className="shadow-soft">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Total Budget</p>
+                        <p className="text-2xl font-bold">
+                          {selectedProject.budget ? `${selectedProject.budget.toLocaleString()} MAD` : 'Not set'}
+                        </p>
                       </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Spent</span>
-                        <span className="font-semibold">${project.spent.toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Remaining</span>
-                        <span className={`font-semibold ${project.remaining < project.totalBudget * 0.1 ? 'text-destructive' : 'text-success'}`}>
-                          ${project.remaining.toLocaleString()}
-                        </span>
-                      </div>
+                      <DollarSign className="h-8 w-8 text-primary" />
                     </div>
+                  </CardContent>
+                </Card>
 
+                <Card className="shadow-soft">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Total Spent</p>
+                        <p className="text-2xl font-bold">{totalSpent.toLocaleString()} MAD</p>
+                      </div>
+                      <TrendingUp className="h-8 w-8 text-accent" />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="shadow-soft">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Utilization</p>
+                        <p className="text-2xl font-bold">{budgetUtilization}%</p>
+                      </div>
+                      <AlertTriangle className={`h-8 w-8 ${budgetUtilization > 80 ? 'text-destructive' : 'text-success'}`} />
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {selectedProject.budget && (
+                <Card className="shadow-soft mb-6">
+                  <CardHeader>
+                    <CardTitle>Budget Progress</CardTitle>
+                  </CardHeader>
+                  <CardContent>
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Budget Used</span>
-                        <span className="font-semibold">{getSpentPercentage(project.spent, project.totalBudget)}%</span>
+                        <span>Spent: {totalSpent.toLocaleString()} MAD</span>
+                        <span>Remaining: {(selectedProject.budget - totalSpent).toLocaleString()} MAD</span>
                       </div>
-                      <Progress 
-                        value={getSpentPercentage(project.spent, project.totalBudget)} 
-                        className="h-3"
-                      />
-                      {project.remaining < project.totalBudget * 0.1 && (
-                        <div className="flex items-center gap-1 text-sm text-destructive">
-                          <AlertTriangle className="h-4 w-4" />
-                          <span>Budget running low</span>
-                        </div>
+                      <Progress value={budgetUtilization} className="h-3" />
+                      {budgetUtilization > 90 && (
+                        <p className="text-sm text-destructive">⚠️ Budget utilization is very high</p>
                       )}
                     </div>
+                  </CardContent>
+                </Card>
+              )}
 
-                    <div className="flex justify-end">
-                      <Button variant="outline" size="sm">View Details</Button>
-                    </div>
-                  </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Expense Form */}
+                <ExpenseForm />
 
-                  <div className="space-y-4">
-                    <h4 className="font-semibold text-foreground">Budget Breakdown</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                      {project.categories.map((category, index) => (
-                        <Card key={index} className="border border-border/50">
-                          <CardContent className="p-4">
-                            <div className="space-y-2">
-                              <div className="flex justify-between items-center">
-                                <span className="text-sm font-medium">{category.name}</span>
-                                {getVarianceIcon(category.spent, category.budgeted)}
-                              </div>
-                              
-                              <div className="space-y-1">
-                                <div className="flex justify-between text-xs">
-                                  <span className="text-muted-foreground">Budgeted</span>
-                                  <span>${category.budgeted.toLocaleString()}</span>
-                                </div>
-                                <div className="flex justify-between text-xs">
-                                  <span className="text-muted-foreground">Spent</span>
-                                  <span className={getVarianceColor(category.spent, category.budgeted)}>
-                                    ${category.spent.toLocaleString()}
-                                  </span>
-                                </div>
-                              </div>
-                              
-                              <div className="space-y-1">
-                                <div className="flex justify-between text-xs">
-                                  <span className="text-muted-foreground">Used</span>
-                                  <span className="font-medium">
-                                    {getSpentPercentage(category.spent, category.budgeted)}%
-                                  </span>
-                                </div>
-                                <Progress 
-                                  value={getSpentPercentage(category.spent, category.budgeted)} 
-                                  className="h-2"
-                                />
-                              </div>
+                {/* Recent Expenses */}
+                <Card className="shadow-soft">
+                  <CardHeader>
+                    <CardTitle>Recent Expenses</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {loading ? (
+                      <p className="text-muted-foreground text-center py-4">Loading expenses...</p>
+                    ) : expenses.length === 0 ? (
+                      <p className="text-muted-foreground text-center py-4">No expenses recorded yet</p>
+                    ) : (
+                      <div className="space-y-3 max-h-96 overflow-y-auto">
+                        {expenses.slice(0, 10).map((expense) => (
+                          <div key={expense.id} className="flex justify-between items-center p-3 bg-muted/20 rounded-lg">
+                            <div>
+                              <p className="font-medium">{expense.category}</p>
+                              <p className="text-sm text-muted-foreground">{expense.description}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {new Date(expense.expense_date).toLocaleDateString()}
+                              </p>
                             </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                            <div className="text-right">
+                              <p className="font-bold">{expense.amount.toLocaleString()} MAD</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            </>
+          )}
         </main>
       </div>
     </div>

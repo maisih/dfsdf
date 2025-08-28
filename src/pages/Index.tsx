@@ -3,6 +3,9 @@ import Sidebar from "@/components/layout/Sidebar";
 import StatsCard from "@/components/dashboard/StatsCard";
 import ProjectProgress from "@/components/dashboard/ProjectProgress";
 import RecentActivity from "@/components/dashboard/RecentActivity";
+import ProjectOverview from "@/components/dashboard/ProjectOverview";
+import QuickActions from "@/components/dashboard/QuickActions";
+import LiveUpdates from "@/components/dashboard/LiveUpdates";
 import { Building2, Users, Clock, AlertTriangle, TrendingUp, CheckCircle } from "lucide-react";
 import constructionHero from "@/assets/construction-hero.jpg";
 import WeatherWidget from "@/components/weather/WeatherWidget";
@@ -82,10 +85,23 @@ const Index = () => {
           </div>
 
           {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <ProjectProgress />
-            <RecentActivity />
-            <WeatherWidget />
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div className="xl:col-span-1">
+              <ProjectProgress />
+            </div>
+            <div className="xl:col-span-1">
+              <RecentActivity />
+            </div>
+            <div className="xl:col-span-1">
+              <WeatherWidget />
+            </div>
+          </div>
+
+          {/* Secondary Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            <ProjectOverview />
+            <QuickActions />
+            <LiveUpdates />
           </div>
 
           {/* Additional Stats */}
