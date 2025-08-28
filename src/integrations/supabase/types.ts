@@ -204,7 +204,7 @@ export type Database = {
           project_id: string | null
           signal_id: string | null
           task_id: string | null
-          uploaded_by: string
+          uploaded_by: string | null
         }
         Insert: {
           ai_analysis?: Json | null
@@ -215,7 +215,7 @@ export type Database = {
           project_id?: string | null
           signal_id?: string | null
           task_id?: string | null
-          uploaded_by: string
+          uploaded_by?: string | null
         }
         Update: {
           ai_analysis?: Json | null
@@ -226,7 +226,7 @@ export type Database = {
           project_id?: string | null
           signal_id?: string | null
           task_id?: string | null
-          uploaded_by?: string
+          uploaded_by?: string | null
         }
         Relationships: [
           {
@@ -373,7 +373,7 @@ export type Database = {
           location: string | null
           priority: Database["public"]["Enums"]["signal_priority"] | null
           project_id: string
-          reported_by: string
+          reported_by: string | null
           resolved_at: string | null
           resolved_by: string | null
           status: string | null
@@ -388,7 +388,7 @@ export type Database = {
           location?: string | null
           priority?: Database["public"]["Enums"]["signal_priority"] | null
           project_id: string
-          reported_by: string
+          reported_by?: string | null
           resolved_at?: string | null
           resolved_by?: string | null
           status?: string | null
@@ -403,7 +403,7 @@ export type Database = {
           location?: string | null
           priority?: Database["public"]["Enums"]["signal_priority"] | null
           project_id?: string
-          reported_by?: string
+          reported_by?: string | null
           resolved_at?: string | null
           resolved_by?: string | null
           status?: string | null

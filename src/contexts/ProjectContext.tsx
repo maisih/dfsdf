@@ -21,6 +21,7 @@ interface ProjectContextType {
   setSelectedProject: (project: Project | null) => void;
   loadProjects: () => Promise<void>;
   addProject: (project: Omit<Project, 'id'>) => Promise<{ success: boolean; data?: any }>;
+  clearProjectData: () => Promise<void>;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -36,6 +37,38 @@ export const useProject = () => {
 export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
+
+  const clearProjectData = async () => {
+    try {
+      // Clear project-specific data from tables (except materials and equipment)
+      // Tasks
+      await supabase.from('tasks').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      
+      // Expenses
+      await supabase.from('expenses').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      
+      // Photos
+      await supabase.from('photos').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      
+      // Documents
+      await supabase.from('documents').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      
+      // Signals
+      await supabase.from('signals').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      
+      console.log('✅ Project data cleared, materials and equipment preserved');
+    } catch (error) {
+      console.error('❌ Error clearing project data:', error);
+    }
+  };
+
+  const handleProjectSelection = async (project: Project | null) => {
+    if (project && project.id !== selectedProject?.id) {
+      console.log('🔄 Switching project, clearing compartments except materials and equipment');
+      await clearProjectData();
+    }
+    setSelectedProject(project);
+  };
 
   const loadProjects = async () => {
     try {
@@ -98,9 +131,10 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     <ProjectContext.Provider value={{
       selectedProject,
       projects,
-      setSelectedProject,
+      setSelectedProject: handleProjectSelection,
       loadProjects,
       addProject,
+      clearProjectData,
     }}>
       {children}
     </ProjectContext.Provider>
