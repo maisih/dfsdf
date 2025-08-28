@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Calendar, Users, Truck, Cloud } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
+import AddDailyLogDialog from "@/components/dialogs/AddDailyLogDialog";
 import { useProject } from "@/contexts/ProjectContext";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -58,10 +59,7 @@ const DailyLogs = () => {
               <h1 className="text-3xl font-bold text-foreground">Daily Logs</h1>
               <p className="text-muted-foreground">Track daily activities and progress</p>
             </div>
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              New Log Entry
-            </Button>
+            <AddDailyLogDialog />
           </div>
 
           {!selectedProject ? (

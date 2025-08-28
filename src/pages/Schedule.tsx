@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
-import { Calendar, DollarSign, TrendingUp, Target } from "lucide-react";
+import { Calendar, DollarSign, TrendingUp, Target, Users, Clock, MapPin } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
 import { useProject } from "@/contexts/ProjectContext";
@@ -17,13 +17,41 @@ const Schedule = () => {
   const [progressPercentage, setProgressPercentage] = useState(0);
   const [newProgress, setNewProgress] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [upcomingTasks, setUpcomingTasks] = useState<any[]>([]);
+  const [teamMembers] = useState([
+    { id: 1, name: "Ahmed El Mansouri", profession: "Site Manager", phone: "+212 661 234 567" },
+    { id: 2, name: "Fatima Benali", profession: "Civil Engineer", phone: "+212 662 345 678" },
+    { id: 3, name: "Youssef Alami", profession: "Safety Officer", phone: "+212 663 456 789" },
+    { id: 4, name: "Zineb Hakim", profession: "Quality Control", phone: "+212 664 567 890" },
+    { id: 5, name: "Omar Benjelloun", profession: "Equipment Operator", phone: "+212 665 678 901" }
+  ]);
   const { toast } = useToast();
 
   useEffect(() => {
     if (selectedProject) {
       calculateProgress();
+      loadUpcomingTasks();
     }
   }, [selectedProject]);
+
+  const loadUpcomingTasks = async () => {
+    if (!selectedProject) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('project_id', selectedProject.id)
+        .neq('status', 'completed')
+        .order('due_date', { ascending: true })
+        .limit(5);
+      
+      if (error) throw error;
+      setUpcomingTasks(data || []);
+    } catch (error) {
+      console.error('Error loading upcoming tasks:', error);
+    }
+  };
 
   const calculateProgress = async () => {
     if (!selectedProject || !selectedProject.budget) return;
@@ -106,8 +134,8 @@ const Schedule = () => {
         <main className="flex-1 p-6">
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h1 className="text-3xl font-bold text-foreground">Project Progress</h1>
-              <p className="text-muted-foreground">Track project progress based on budget utilization</p>
+              <h1 className="text-3xl font-bold text-foreground">Schedule & Progress</h1>
+              <p className="text-muted-foreground">Track project progress, upcoming activities, and team</p>
             </div>
           </div>
 
@@ -244,37 +272,72 @@ const Schedule = () => {
                 </CardContent>
               </Card>
 
-              {/* Project Timeline */}
-              {(selectedProject.start_date || selectedProject.end_date) && (
-                <Card className="shadow-soft">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Calendar className="h-5 w-5" />
-                      Project Timeline
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {selectedProject.start_date && (
-                        <div>
-                          <span className="text-sm text-muted-foreground">Start Date:</span>
-                          <p className="font-medium">
-                            {new Date(selectedProject.start_date).toLocaleDateString()}
-                          </p>
+              {/* Upcoming Activities */}
+              <Card className="shadow-soft">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Clock className="h-5 w-5" />
+                    Upcoming Activities
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {upcomingTasks.length === 0 ? (
+                    <p className="text-center text-muted-foreground py-8">No upcoming activities scheduled</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {upcomingTasks.map((task) => (
+                        <div key={task.id} className="flex items-center justify-between p-4 bg-muted/20 rounded-lg">
+                          <div className="flex-1">
+                            <h4 className="font-medium text-foreground">{task.title}</h4>
+                            <p className="text-sm text-muted-foreground">{task.description}</p>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-sm font-medium text-foreground">
+                              {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No due date'}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {task.assigned_to || 'Unassigned'}
+                            </div>
+                          </div>
                         </div>
-                      )}
-                      {selectedProject.end_date && (
-                        <div>
-                          <span className="text-sm text-muted-foreground">End Date:</span>
-                          <p className="font-medium">
-                            {new Date(selectedProject.end_date).toLocaleDateString()}
-                          </p>
-                        </div>
-                      )}
+                      ))}
                     </div>
-                  </CardContent>
-                </Card>
-              )}
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Team Section */}
+              <Card className="shadow-soft">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    Project Team
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {teamMembers.map((member) => (
+                      <div key={member.id} className="p-4 bg-muted/20 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
+                            <span className="text-primary font-medium">
+                              {member.name.split(' ').map(n => n[0]).join('')}
+                            </span>
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-medium text-foreground">{member.name}</h4>
+                            <p className="text-sm text-muted-foreground">{member.profession}</p>
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                              <MapPin className="h-3 w-3" />
+                              {member.phone}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           )}
         </main>

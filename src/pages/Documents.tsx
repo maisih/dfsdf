@@ -4,95 +4,42 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, FileText, Download, Eye, Share, Calendar, User } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
-
-const documents = [
-  {
-    id: 1,
-    title: "Architectural Plans - Level 1-5",
-    project: "Downtown Office Complex",
-    type: "Drawings",
-    category: "Architectural",
-    version: "Rev 3.2",
-    size: "15.2 MB",
-    uploadedBy: "Sarah Johnson",
-    uploadDate: "Nov 25, 2024",
-    status: "Current",
-    format: "PDF",
-    description: "Latest architectural drawings including all revisions from client feedback"
-  },
-  {
-    id: 2,
-    title: "Structural Steel Shop Drawings",
-    project: "Residential Tower Phase 2",
-    type: "Shop Drawings", 
-    category: "Structural",
-    version: "Rev 1.0",
-    size: "8.7 MB",
-    uploadedBy: "Mike Chen",
-    uploadDate: "Nov 22, 2024",
-    status: "Under Review",
-    format: "DWG",
-    description: "Steel fabrication shop drawings for approval"
-  },
-  {
-    id: 3,
-    title: "MEP Installation Specifications",
-    project: "Industrial Warehouse",
-    type: "Specifications",
-    category: "MEP",
-    version: "Final",
-    size: "3.4 MB",
-    uploadedBy: "Alex Rodriguez",
-    uploadDate: "Nov 20, 2024",
-    status: "Approved",
-    format: "PDF",
-    description: "Complete MEP installation specifications and standards"
-  },
-  {
-    id: 4,
-    title: "Material Safety Data Sheets",
-    project: "Shopping Center Renovation",
-    type: "Safety Documents",
-    category: "Safety",
-    version: "Current",
-    size: "12.1 MB",
-    uploadedBy: "Emily Davis",
-    uploadDate: "Nov 18, 2024",
-    status: "Current",
-    format: "PDF",
-    description: "MSDS for all materials used on project"
-  },
-  {
-    id: 5,
-    title: "Quality Control Procedures",
-    project: "All Projects",
-    type: "Procedures",
-    category: "Quality",
-    version: "v2.1",
-    size: "2.8 MB",
-    uploadedBy: "Tom Wilson",
-    uploadDate: "Nov 15, 2024",
-    status: "Current",
-    format: "DOCX",
-    description: "Standard quality control and inspection procedures"
-  },
-  {
-    id: 6,
-    title: "Project Contract Agreement",
-    project: "Downtown Office Complex",
-    type: "Contract",
-    category: "Legal",
-    version: "Executed",
-    size: "1.9 MB",
-    uploadedBy: "Legal Department",
-    uploadDate: "Oct 30, 2024",
-    status: "Executed",
-    format: "PDF",
-    description: "Fully executed construction contract with all amendments"
-  }
-];
+import { useProject } from "@/contexts/ProjectContext";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Documents = () => {
+  const { selectedProject } = useProject();
+  const [documents, setDocuments] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (selectedProject) {
+      loadDocuments();
+    } else {
+      setDocuments([]);
+    }
+  }, [selectedProject]);
+
+  const loadDocuments = async () => {
+    if (!selectedProject) return;
+    
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('documents')
+        .select('*')
+        .eq('project_id', selectedProject.id)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      setDocuments(data || []);
+    } catch (error) {
+      console.error('Error loading documents:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Current":
@@ -162,8 +109,21 @@ const Documents = () => {
             </div>
           </div>
 
-          <div className="grid gap-4">
-            {documents.map((doc) => (
+          {!selectedProject ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Please select a project to view documents</p>
+            </div>
+          ) : loading ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Loading documents...</p>
+            </div>
+          ) : documents.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">No documents found for this project</p>
+            </div>
+          ) : (
+            <div className="grid gap-4">
+              {documents.map((doc) => (
               <Card key={doc.id} className="shadow-soft hover:shadow-medium transition-all duration-300">
                 <CardHeader>
                   <div className="flex justify-between items-start">
@@ -187,13 +147,13 @@ const Documents = () => {
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                     <div>
-                      <span className="text-sm text-muted-foreground">Project</span>
-                      <p className="font-medium">{doc.project}</p>
+                      <span className="text-sm text-muted-foreground">Name</span>
+                      <p className="font-medium">{doc.name}</p>
                     </div>
                     
                     <div>
                       <span className="text-sm text-muted-foreground">Type</span>
-                      <p className="font-medium">{doc.type}</p>
+                      <p className="font-medium">{doc.mime_type}</p>
                     </div>
                     
                     <div>
@@ -203,7 +163,7 @@ const Documents = () => {
                     
                     <div>
                       <span className="text-sm text-muted-foreground">Size</span>
-                      <p className="font-medium">{doc.size}</p>
+                      <p className="font-medium">{doc.file_size ? `${(doc.file_size / 1024 / 1024).toFixed(1)} MB` : 'Unknown'}</p>
                     </div>
                   </div>
                   
@@ -211,19 +171,19 @@ const Documents = () => {
                     <div className="flex items-center gap-2">
                       <User className="h-4 w-4 text-primary" />
                       <span className="text-muted-foreground">Uploaded by:</span>
-                      <span className="font-medium text-foreground">{doc.uploadedBy}</span>
+                      <span className="font-medium text-foreground">{doc.uploaded_by || 'Unknown'}</span>
                     </div>
                     
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-primary" />
                       <span className="text-muted-foreground">Upload Date:</span>
-                      <span className="font-medium text-foreground">{doc.uploadDate}</span>
+                      <span className="font-medium text-foreground">{new Date(doc.created_at).toLocaleDateString()}</span>
                     </div>
                   </div>
                   
                   <div className="flex justify-between items-center pt-4 border-t">
                     <div className="text-sm text-muted-foreground">
-                      {doc.format} • {doc.category} • {doc.type}
+                      {doc.mime_type} • Version {doc.version}
                     </div>
                     
                     <div className="flex gap-2">
@@ -243,19 +203,11 @@ const Documents = () => {
                     </div>
                   </div>
                   
-                  {doc.status === "Under Review" && (
-                    <div className="mt-4 p-3 bg-warning/5 border border-warning/20 rounded-lg">
-                      <div className="flex items-center gap-2 text-sm text-warning">
-                        <FileText className="h-4 w-4" />
-                        <span className="font-medium">Review Status:</span>
-                        <span>This document is currently under review by the project team</span>
-                      </div>
-                    </div>
-                  )}
                 </CardContent>
               </Card>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </main>
       </div>
     </div>

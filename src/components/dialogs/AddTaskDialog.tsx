@@ -51,8 +51,8 @@ const AddTaskDialog = () => {
       if (error) throw error;
       
       toast({
-        title: "Task Created",
-        description: "Task has been successfully created.",
+        title: "Fund Request Created",
+        description: "Funding request has been successfully submitted.",
       });
       
       setOpen(false);
@@ -66,7 +66,7 @@ const AddTaskDialog = () => {
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to create task. Please try again.",
+        description: "Failed to create funding request. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -79,24 +79,24 @@ const AddTaskDialog = () => {
       <DialogTrigger asChild>
         <Button className="gap-2">
           <Plus className="h-4 w-4" />
-          New Task
+          New Fund Request
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[525px]">
         <DialogHeader>
-          <DialogTitle>Create New Task</DialogTitle>
+          <DialogTitle>Create New Fund Request</DialogTitle>
           <DialogDescription>
-            Add a new task to your project
+            Request funding for project materials, equipment, or services
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="title">Task Title</Label>
+            <Label htmlFor="title">Request Title</Label>
             <Input
               id="title"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              placeholder="Enter task title"
+              placeholder="Enter funding request title"
               required
             />
           </div>
@@ -107,7 +107,7 @@ const AddTaskDialog = () => {
               id="description"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="Task description"
+              placeholder="Describe what the funding will be used for"
               rows={3}
             />
           </div>
@@ -143,18 +143,18 @@ const AddTaskDialog = () => {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="assigned_to">Assigned To (Optional)</Label>
+            <Label htmlFor="assigned_to">Approval Status</Label>
             <Input
               id="assigned_to"
               value={formData.assigned_to}
               onChange={(e) => setFormData({ ...formData, assigned_to: e.target.value })}
-              placeholder="User ID or email"
+              placeholder="Pending Manager Approval"
             />
           </div>
           
           <div className="flex gap-2">
             <Button type="submit" disabled={isLoading} className="flex-1">
-              {isLoading ? "Creating..." : "Create Task"}
+              {isLoading ? "Submitting..." : "Submit Request"}
             </Button>
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancel
