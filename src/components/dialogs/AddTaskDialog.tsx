@@ -60,6 +60,9 @@ const AddTaskDialog = () => {
         description: "Task has been successfully created.",
       });
       
+      // Refresh the page to show the new task
+      window.location.reload();
+      
       setOpen(false);
       setFormData({
         title: '',

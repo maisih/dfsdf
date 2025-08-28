@@ -67,14 +67,36 @@ const Budget = () => {
     
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('expenses')
-        .select('*')
-        .eq('project_id', selectedProject.id)
-        .order('expense_date', { ascending: false });
+      // Load both expenses and task costs
+      const [expensesResult, tasksResult] = await Promise.all([
+        supabase
+          .from('expenses')
+          .select('*')
+          .eq('project_id', selectedProject.id)
+          .order('expense_date', { ascending: false }),
+        supabase
+          .from('tasks')
+          .select('id, title, cost, due_date, status')
+          .eq('project_id', selectedProject.id)
+          .not('cost', 'is', null)
+      ]);
       
-      if (error) throw error;
-      setExpenses(data || []);
+      if (expensesResult.error) throw expensesResult.error;
+      if (tasksResult.error) throw tasksResult.error;
+      
+      setExpenses(expensesResult.data || []);
+      
+      // Add task costs to expenses for display
+      const taskExpenses = (tasksResult.data || []).map(task => ({
+        id: `task-${task.id}`,
+        category: 'Task Cost',
+        description: task.title,
+        amount: task.cost,
+        expense_date: task.due_date || new Date().toISOString().split('T')[0],
+        isTask: true
+      }));
+      
+      setExpenses([...expensesResult.data || [], ...taskExpenses]);
     } catch (error) {
       console.error('Error loading expenses:', error);
     } finally {

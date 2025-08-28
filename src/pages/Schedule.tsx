@@ -7,14 +7,42 @@ import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
 import AddEventDialog from "@/components/dialogs/AddEventDialog";
 import { useProject } from "@/contexts/ProjectContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
 
 const Schedule = () => {
   const { selectedProject } = useProject();
   const [events, setEvents] = useState<any[]>([]);
+  const [tasks, setTasks] = useState<any[]>([]);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
+
+  useEffect(() => {
+    if (selectedProject) {
+      loadTasks();
+    } else {
+      setTasks([]);
+    }
+  }, [selectedProject]);
+
+  const loadTasks = async () => {
+    if (!selectedProject) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('project_id', selectedProject.id)
+        .not('due_date', 'is', null)
+        .order('due_date', { ascending: true });
+      
+      if (error) throw error;
+      setTasks(data || []);
+    } catch (error) {
+      console.error('Error loading tasks:', error);
+    }
+  };
 
   const handleEventAdded = (newEvent: any) => {
     setEvents([...events, { ...newEvent, id: Date.now() }]);
@@ -44,7 +72,22 @@ const Schedule = () => {
   const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
 
   const getEventsForDay = (day: Date) => {
-    return events.filter(event => isSameDay(new Date(event.date), day));
+    const dayEvents = events.filter(event => isSameDay(new Date(event.date), day));
+    const dayTasks = tasks.filter(task => task.due_date && isSameDay(new Date(task.due_date), day));
+    
+    return [
+      ...dayEvents,
+      ...dayTasks.map(task => ({
+        id: `task-${task.id}`,
+        title: task.title,
+        date: task.due_date,
+        type: 'Task',
+        description: task.description,
+        isTask: true,
+        status: task.status,
+        priority: task.priority
+      }))
+    ];
   };
 
   const navigateMonth = (direction: 'prev' | 'next') => {
@@ -123,8 +166,19 @@ const Schedule = () => {
                           </div>
                           <div className="space-y-1">
                             {dayEvents.slice(0, 3).map((event, index) => (
-                              <div key={index} className="text-xs p-1 rounded text-white bg-primary/80 truncate">
-                                {event.title}
+                              <div 
+                                key={index} 
+                                className={`text-xs p-1 rounded text-white truncate ${
+                                  event.isTask 
+                                    ? event.status === 'completed' 
+                                      ? 'bg-success/80' 
+                                      : event.priority >= 3 
+                                        ? 'bg-destructive/80' 
+                                        : 'bg-accent/80'
+                                    : 'bg-primary/80'
+                                }`}
+                              >
+                                {event.isTask ? `📋 ${event.title}` : event.title}
                               </div>
                             ))}
                             {dayEvents.length > 3 && (
@@ -149,7 +203,7 @@ const Schedule = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {events.length === 0 ? (
+                  {events.length === 0 && tasks.length === 0 ? (
                     <div className="text-center py-8">
                       <CalendarIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                       <h3 className="text-lg font-semibold text-foreground mb-2">No Events Scheduled</h3>
@@ -161,7 +215,16 @@ const Schedule = () => {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {events.slice(0, 5).map((event) => (
+                      {[...events, ...tasks.map(task => ({
+                        id: `task-${task.id}`,
+                        title: task.title,
+                        date: task.due_date,
+                        type: 'Task',
+                        description: task.description,
+                        isTask: true,
+                        status: task.status,
+                        priority: task.priority
+                      }))].slice(0, 5).map((event) => (
                         <div key={event.id} className="flex items-center gap-4 p-3 bg-muted/20 rounded-lg">
                           <div className="text-center min-w-[60px]">
                             <div className="text-lg font-bold text-primary">
@@ -173,10 +236,21 @@ const Schedule = () => {
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              <h4 className="font-medium text-foreground">{event.title}</h4>
+                              <h4 className="font-medium text-foreground">
+                                {event.isTask ? '📋' : ''} {event.title}
+                              </h4>
                               <Badge variant="outline" className={getEventTypeColor(event.type)}>
                                 {event.type}
                               </Badge>
+                              {event.isTask && event.status && (
+                                <Badge variant="outline" className={
+                                  event.status === 'completed' ? 'bg-success/10 text-success border-success/20' :
+                                  event.status === 'in_progress' ? 'bg-primary/10 text-primary border-primary/20' :
+                                  'bg-warning/10 text-warning border-warning/20'
+                                }>
+                                  {event.status}
+                                </Badge>
+                              )}
                             </div>
                             <p className="text-sm text-muted-foreground">{event.description}</p>
                             {event.time && (
@@ -187,9 +261,9 @@ const Schedule = () => {
                           </div>
                         </div>
                       ))}
-                      {events.length > 5 && (
+                      {(events.length + tasks.length) > 5 && (
                         <div className="text-center text-sm text-muted-foreground">
-                          And {events.length - 5} more events this month...
+                          And {(events.length + tasks.length) - 5} more events this month...
                         </div>
                       )}
                     </div>
