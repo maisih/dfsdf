@@ -20,7 +20,7 @@ interface ProjectContextType {
   projects: Project[];
   setSelectedProject: (project: Project | null) => void;
   loadProjects: () => Promise<void>;
-  addProject: (project: Omit<Project, 'id'>) => Promise<void>;
+  addProject: (project: Omit<Project, 'id'>) => Promise<{ success: boolean; data?: any }>;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -58,7 +58,9 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const addProject = async (project: Omit<Project, 'id'>) => {
     try {
-      console.log('Attempting to create project:', project);
+      console.log('🚀 Starting project creation:', project);
+      console.log('📍 Selected project before creation:', selectedProject);
+      
       const { data, error } = await supabase
         .from('projects')
         .insert([project])
@@ -66,14 +68,24 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         .single();
       
       if (error) {
-        console.error('Supabase error:', error);
-        throw error;
+        console.error('❌ Supabase project creation error:', error);
+        throw new Error(`Database error: ${error.message}`);
       }
-      console.log('Project created successfully:', data);
+      
+      console.log('✅ Project created successfully:', data);
+      
+      // Reload projects to update the list
       await loadProjects();
-      setSelectedProject(data);
+      
+      // Set the newly created project as selected
+      if (data) {
+        setSelectedProject(data);
+        console.log('✅ New project set as selected:', data.name);
+      }
+      
+      return { success: true, data };
     } catch (error) {
-      console.error('Error adding project:', error);
+      console.error('💥 Project creation failed:', error);
       throw error;
     }
   };

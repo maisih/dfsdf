@@ -36,6 +36,7 @@ const AddProjectDialog = () => {
     setIsLoading(true);
     
     try {
+      console.log('🎯 Attempting to create project with data:', formData);
       await addProject({
         ...formData,
         budget: parseFloat(formData.budget) || null,
@@ -45,9 +46,10 @@ const AddProjectDialog = () => {
         created_by: '00000000-0000-0000-0000-000000000000' // Temporary until auth is implemented
       });
       
+      console.log('🎉 Project creation initiated successfully');
       toast({
-        title: "Project Created",
-        description: "Project has been successfully created.",
+        title: "Success!",
+        description: `Project "${formData.name}" has been created successfully.`,
       });
       
       setOpen(false);
@@ -60,10 +62,11 @@ const AddProjectDialog = () => {
         end_date: ''
       });
     } catch (error) {
-      console.error('Project creation error:', error);
+      console.error('❌ Project creation error:', error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to create project. Please try again.";
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to create project. Please try again.",
+        title: "Error Creating Project",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
