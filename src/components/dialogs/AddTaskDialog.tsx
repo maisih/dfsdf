@@ -42,10 +42,13 @@ const AddTaskDialog = () => {
       const { error } = await supabase
         .from('tasks')
         .insert([{
-          ...formData,
+          title: formData.title,
+          description: formData.description,
           project_id: selectedProject.id,
           priority: parseInt(formData.priority),
           cost: formData.cost ? parseFloat(formData.cost) : null,
+          due_date: formData.due_date || null,
+          assigned_to: null, // Set to null until authentication is implemented
           created_by: null, // Set to null until authentication is implemented
           status: 'pending'
         }]);
