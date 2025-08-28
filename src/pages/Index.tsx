@@ -9,8 +9,75 @@ import LiveUpdates from "@/components/dashboard/LiveUpdates";
 import { Building2, Users, Clock, AlertTriangle, TrendingUp, CheckCircle } from "lucide-react";
 import constructionHero from "@/assets/construction-hero.jpg";
 import WeatherWidget from "@/components/weather/WeatherWidget";
+import { useProject } from "@/contexts/ProjectContext";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
+  const { selectedProject } = useProject();
+  const [stats, setStats] = useState({
+    activeProjects: 0,
+    teamMembers: 0,
+    openTasks: 0,
+    safetyDays: 0,
+    budgetUtilization: 0,
+    schedulePerformance: 0
+  });
+
+  useEffect(() => {
+    if (selectedProject) {
+      loadProjectStats();
+    } else {
+      // Reset stats when no project is selected
+      setStats({
+        activeProjects: 0,
+        teamMembers: 0,
+        openTasks: 0,
+        safetyDays: 0,
+        budgetUtilization: 0,
+        schedulePerformance: 0
+      });
+    }
+  }, [selectedProject]);
+
+  const loadProjectStats = async () => {
+    if (!selectedProject) return;
+
+    try {
+      // Load team members count
+      const { data: teamData } = await supabase
+        .from('team_members')
+        .select('id')
+        .eq('project_id', selectedProject.id);
+
+      // Load open tasks count
+      const { data: tasksData } = await supabase
+        .from('tasks')
+        .select('id')
+        .eq('project_id', selectedProject.id)
+        .neq('status', 'completed');
+
+      // Load expenses for budget calculation
+      const { data: expensesData } = await supabase
+        .from('expenses')
+        .select('amount')
+        .eq('project_id', selectedProject.id);
+
+      const totalSpent = expensesData?.reduce((sum, expense) => sum + (expense.amount || 0), 0) || 0;
+      const budgetUtilization = selectedProject.budget > 0 ? Math.round((totalSpent / selectedProject.budget) * 100) : 0;
+
+      setStats({
+        activeProjects: 1, // Current selected project
+        teamMembers: teamData?.length || 0,
+        openTasks: tasksData?.length || 0,
+        safetyDays: 30, // Static for now
+        budgetUtilization,
+        schedulePerformance: selectedProject.progress || 0
+      });
+    } catch (error) {
+      console.error('Error loading project stats:', error);
+    }
+  };
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -29,20 +96,27 @@ const Index = () => {
               className="absolute inset-0 w-full h-full object-cover mix-blend-overlay"
             />
             <div className="relative p-8 text-white">
-              <h1 className="text-3xl font-bold mb-2">Welcome to SiteFlow Master</h1>
-              <p className="text-xl opacity-90 mb-4">Your comprehensive construction project management platform</p>
+              <h1 className="text-3xl font-bold mb-2">
+                {selectedProject ? `${selectedProject.name} Dashboard` : 'Welcome to SiteFlow Master'}
+              </h1>
+              <p className="text-xl opacity-90 mb-4">
+                {selectedProject 
+                  ? `${selectedProject.location || 'Project location'} - ${selectedProject.description || 'Construction project'}`
+                  : 'Your comprehensive construction project management platform'
+                }
+              </p>
               <div className="flex items-center gap-6 text-sm">
                 <div className="flex items-center gap-2">
                   <Building2 className="h-4 w-4" />
-                  <span>4 Active Projects</span>
+                  <span>{selectedProject ? 'Selected Project' : 'No Project Selected'}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Users className="h-4 w-4" />
-                  <span>127 Team Members</span>
+                  <span>{stats.teamMembers} Team Members</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <TrendingUp className="h-4 w-4" />
-                  <span>89% On-Time Completion</span>
+                  <span>{stats.schedulePerformance}% Progress</span>
                 </div>
               </div>
             </div>
@@ -51,36 +125,36 @@ const Index = () => {
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <StatsCard
-              title="Active Projects"
-              value="4"
-              change="+1 this month"
+              title="Selected Project"
+              value={selectedProject ? "1" : "0"}
+              change={selectedProject ? selectedProject.name : "Select a project"}
               changeType="positive"
               icon={Building2}
-              description="2 ahead of schedule"
+              description={selectedProject ? selectedProject.status : "No project selected"}
             />
             <StatsCard
               title="Team Members"
-              value="127"
-              change="+12 this week"
+              value={stats.teamMembers.toString()}
+              change={`${stats.teamMembers > 0 ? 'Active' : 'No'} members`}
               changeType="positive"
               icon={Users}
-              description="Across all projects"
+              description="In this project"
             />
             <StatsCard
               title="Open Tasks"
-              value="43"
-              change="-8 today"
-              changeType="positive"
+              value={stats.openTasks.toString()}
+              change={`${stats.openTasks} pending`}
+              changeType={stats.openTasks > 10 ? "negative" : "positive"}
               icon={CheckCircle}
-              description="15 high priority"
+              description="Active tasks"
             />
             <StatsCard
-              title="Safety Incidents"
-              value="0"
-              change="30 days streak"
+              title="Safety Days"
+              value={stats.safetyDays.toString()}
+              change="No incidents"
               changeType="positive"
               icon={AlertTriangle}
-              description="Last incident: None"
+              description="Days without incidents"
             />
           </div>
 
@@ -108,27 +182,27 @@ const Index = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <StatsCard
               title="Budget Utilization"
-              value="67%"
-              change="On target"
-              changeType="positive"
+              value={`${stats.budgetUtilization}%`}
+              change={selectedProject?.budget ? `${(selectedProject.spent || 0).toLocaleString()} MAD of ${selectedProject.budget.toLocaleString()} MAD` : "No budget set"}
+              changeType={stats.budgetUtilization > 80 ? "negative" : "positive"}
               icon={TrendingUp}
-              description="$4.2M of $6.25M"
+              description="Project budget usage"
             />
             <StatsCard
               title="Schedule Performance"
-              value="89%"
-              change="+2% this month"
-              changeType="positive"
+              value={`${stats.schedulePerformance}%`}
+              change="Project progress"
+              changeType={stats.schedulePerformance > 75 ? "positive" : "negative"}
               icon={Clock}
-              description="Ahead of baseline"
+              description="Completion status"
             />
             <StatsCard
-              title="Quality Inspections"
-              value="98%"
-              change="Pass rate"
+              title="Project Status"
+              value={selectedProject?.status || "N/A"}
+              change={selectedProject ? "Active project" : "No project selected"}
               changeType="positive"
               icon={CheckCircle}
-              description="142 completed this month"
+              description={selectedProject ? "Current status" : "Select a project to begin"}
             />
           </div>
         </main>

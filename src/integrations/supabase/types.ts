@@ -528,6 +528,45 @@ export type Database = {
           },
         ]
       }
+      team_members: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          joined_date: string | null
+          name: string
+          phone: string | null
+          profession: string
+          project_id: string
+          role: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          joined_date?: string | null
+          name: string
+          phone?: string | null
+          profession: string
+          project_id: string
+          role?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          joined_date?: string | null
+          name?: string
+          phone?: string | null
+          profession?: string
+          project_id?: string
+          role?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

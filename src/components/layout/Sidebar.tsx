@@ -5,6 +5,7 @@ import {
   Calendar,
   CheckSquare,
   ClipboardList,
+  Users,
   Package,
   Wrench,
   DollarSign,
@@ -43,6 +44,11 @@ const navigation = [
     name: "Daily Logs",
     icon: ClipboardList,
     href: "/logs",
+  },
+  {
+    name: "Team",
+    icon: Users,
+    href: "/team",
   },
   {
     name: "Materials",

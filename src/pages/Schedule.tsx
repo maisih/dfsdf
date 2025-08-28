@@ -18,21 +18,37 @@ const Schedule = () => {
   const [newProgress, setNewProgress] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [upcomingTasks, setUpcomingTasks] = useState<any[]>([]);
-  const [teamMembers] = useState([
-    { id: 1, name: "Ahmed El Mansouri", profession: "Site Manager", phone: "+212 661 234 567" },
-    { id: 2, name: "Fatima Benali", profession: "Civil Engineer", phone: "+212 662 345 678" },
-    { id: 3, name: "Youssef Alami", profession: "Safety Officer", phone: "+212 663 456 789" },
-    { id: 4, name: "Zineb Hakim", profession: "Quality Control", phone: "+212 664 567 890" },
-    { id: 5, name: "Omar Benjelloun", profession: "Equipment Operator", phone: "+212 665 678 901" }
-  ]);
+  const [teamMembers, setTeamMembers] = useState<any[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
     if (selectedProject) {
       calculateProgress();
       loadUpcomingTasks();
+      loadTeamMembers();
+    } else {
+      setUpcomingTasks([]);
+      setTeamMembers([]);
     }
   }, [selectedProject]);
+
+  const loadTeamMembers = async () => {
+    if (!selectedProject) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('team_members')
+        .select('*')
+        .eq('project_id', selectedProject.id)
+        .order('name', { ascending: true })
+        .limit(6);
+      
+      if (error) throw error;
+      setTeamMembers(data || []);
+    } catch (error) {
+      console.error('Error loading team members:', error);
+    }
+  };
 
   const loadUpcomingTasks = async () => {
     if (!selectedProject) return;
@@ -315,27 +331,31 @@ const Schedule = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {teamMembers.map((member) => (
-                      <div key={member.id} className="p-4 bg-muted/20 rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
-                            <span className="text-primary font-medium">
-                              {member.name.split(' ').map(n => n[0]).join('')}
-                            </span>
-                          </div>
-                          <div className="flex-1">
-                            <h4 className="font-medium text-foreground">{member.name}</h4>
-                            <p className="text-sm text-muted-foreground">{member.profession}</p>
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                              <MapPin className="h-3 w-3" />
-                              {member.phone}
+                  {teamMembers.length === 0 ? (
+                    <p className="text-center text-muted-foreground py-8">No team members assigned to this project</p>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {teamMembers.map((member) => (
+                        <div key={member.id} className="p-4 bg-muted/20 rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
+                              <span className="text-primary font-medium">
+                                {member.name.split(' ').map((n: string) => n[0]).join('')}
+                              </span>
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="font-medium text-foreground">{member.name}</h4>
+                              <p className="text-sm text-muted-foreground">{member.profession}</p>
+                              <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                                <MapPin className="h-3 w-3" />
+                                {member.phone || member.email || 'No contact info'}
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>

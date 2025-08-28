@@ -9,7 +9,7 @@ import Projects from "./pages/Projects";
 import Schedule from "./pages/Schedule";
 import Tasks from "./pages/Tasks";
 import DailyLogs from "./pages/DailyLogs";
-
+import Team from "./pages/Team";
 import Materials from "./pages/Materials";
 import Equipment from "./pages/Equipment";
 import Budget from "./pages/Budget";
@@ -32,7 +32,7 @@ const App = () => (
             <Route path="/schedule" element={<Schedule />} />
             <Route path="/tasks" element={<Tasks />} />
             <Route path="/logs" element={<DailyLogs />} />
-            
+            <Route path="/team" element={<Team />} />
             <Route path="/materials" element={<Materials />} />
             <Route path="/equipment" element={<Equipment />} />
             <Route path="/budget" element={<Budget />} />
