@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, FileText, Download, Eye, Share, Calendar, User } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
+import AddDocumentDialog from "@/components/dialogs/AddDocumentDialog";
 import { useProject } from "@/contexts/ProjectContext";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +13,7 @@ const Documents = () => {
   const { selectedProject } = useProject();
   const [documents, setDocuments] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [showAddDialog, setShowAddDialog] = useState(false);
 
   useEffect(() => {
     if (selectedProject) {
@@ -102,7 +104,7 @@ const Documents = () => {
             </div>
             <div className="flex gap-2">
               <Button variant="outline">Document Library</Button>
-              <Button className="gap-2">
+              <Button className="gap-2" onClick={() => setShowAddDialog(true)}>
                 <Plus className="h-4 w-4" />
                 Upload Document
               </Button>
@@ -208,6 +210,11 @@ const Documents = () => {
               ))}
             </div>
           )}
+          <AddDocumentDialog
+            open={showAddDialog}
+            onOpenChange={setShowAddDialog}
+            onDocumentAdded={loadDocuments}
+          />
         </main>
       </div>
     </div>

@@ -1,14 +1,9 @@
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
-import StatsCard from "@/components/dashboard/StatsCard";
-import ProjectProgress from "@/components/dashboard/ProjectProgress";
-import RecentActivity from "@/components/dashboard/RecentActivity";
-import ProjectOverview from "@/components/dashboard/ProjectOverview";
-import QuickActions from "@/components/dashboard/QuickActions";
-import LiveUpdates from "@/components/dashboard/LiveUpdates";
-import { Building2, Users, Clock, AlertTriangle, TrendingUp, CheckCircle } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Building2, Users, Calendar, DollarSign, Target, AlertTriangle } from "lucide-react";
 import constructionHero from "@/assets/construction-hero.jpg";
-import WeatherWidget from "@/components/weather/WeatherWidget";
 import { useProject } from "@/contexts/ProjectContext";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,29 +11,46 @@ import { supabase } from "@/integrations/supabase/client";
 const Index = () => {
   const { selectedProject } = useProject();
   const [stats, setStats] = useState({
-    activeProjects: 0,
     teamMembers: 0,
     openTasks: 0,
-    safetyDays: 0,
     budgetUtilization: 0,
-    schedulePerformance: 0
+    totalExpenses: 0
   });
+  const [activeTasks, setActiveTasks] = useState<any[]>([]);
 
   useEffect(() => {
     if (selectedProject) {
       loadProjectStats();
+      loadActiveTasks();
     } else {
-      // Reset stats when no project is selected
       setStats({
-        activeProjects: 0,
         teamMembers: 0,
         openTasks: 0,
-        safetyDays: 0,
         budgetUtilization: 0,
-        schedulePerformance: 0
+        totalExpenses: 0
       });
+      setActiveTasks([]);
     }
   }, [selectedProject]);
+
+  const loadActiveTasks = async () => {
+    if (!selectedProject) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('project_id', selectedProject.id)
+        .in('status', ['in-progress', 'pending'])
+        .order('created_at', { ascending: false })
+        .limit(3);
+      
+      if (error) throw error;
+      setActiveTasks(data || []);
+    } catch (error) {
+      console.error('Error loading active tasks:', error);
+    }
+  };
 
   const loadProjectStats = async () => {
     if (!selectedProject) return;
@@ -67,16 +79,31 @@ const Index = () => {
       const budgetUtilization = selectedProject.budget > 0 ? Math.round((totalSpent / selectedProject.budget) * 100) : 0;
 
       setStats({
-        activeProjects: 1, // Current selected project
         teamMembers: teamData?.length || 0,
         openTasks: tasksData?.length || 0,
-        safetyDays: 30, // Static for now
         budgetUtilization,
-        schedulePerformance: selectedProject.progress || 0
+        totalExpenses: totalSpent
       });
     } catch (error) {
       console.error('Error loading project stats:', error);
     }
+  };
+
+  const getDaysUntilDeadline = () => {
+    if (!selectedProject?.end_date) return null;
+    const endDate = new Date(selectedProject.end_date);
+    const today = new Date();
+    const timeDiff = endDate.getTime() - today.getTime();
+    const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+    return daysDiff;
+  };
+
+  const getDeadlineStatus = (days: number | null) => {
+    if (days === null) return 'No deadline set';
+    if (days < 0) return `Overdue by ${Math.abs(days)} days`;
+    if (days === 0) return 'Due today';
+    if (days <= 7) return `${days} days remaining`;
+    return `${days} days remaining`;
   };
   return (
     <div className="min-h-screen bg-background">
@@ -87,124 +114,208 @@ const Index = () => {
         </div>
         
         <main className="flex-1 ml-64 p-6 space-y-6">
-          {/* Hero Section */}
-          <div className="relative overflow-hidden rounded-xl bg-gradient-primary shadow-medium">
-            <div className="absolute inset-0 bg-black/20"></div>
-            <img 
-              src={constructionHero} 
-              alt="Construction site overview" 
-              className="absolute inset-0 w-full h-full object-cover mix-blend-overlay"
-            />
-            <div className="relative p-8 text-white">
-              <h1 className="text-3xl font-bold mb-2">
-                {selectedProject ? `${selectedProject.name} Dashboard` : 'Welcome to SiteFlow Master'}
-              </h1>
-              <p className="text-xl opacity-90 mb-4">
-                {selectedProject 
-                  ? `${selectedProject.location || 'Project location'} - ${selectedProject.description || 'Construction project'}`
-                  : 'Your comprehensive construction project management platform'
-                }
-              </p>
-              <div className="flex items-center gap-6 text-sm">
-                <div className="flex items-center gap-2">
-                  <Building2 className="h-4 w-4" />
-                  <span>{selectedProject ? 'Selected Project' : 'No Project Selected'}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4" />
-                  <span>{stats.teamMembers} Team Members</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4" />
-                  <span>{stats.schedulePerformance}% Progress</span>
+          {!selectedProject ? (
+            <div className="text-center py-20">
+              <Building2 className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+              <h2 className="text-2xl font-bold text-foreground mb-2">No Project Selected</h2>
+              <p className="text-muted-foreground">Please select a project to view the dashboard</p>
+            </div>
+          ) : (
+            <>
+              {/* Project Header */}
+              <div className="relative overflow-hidden rounded-xl bg-gradient-primary shadow-medium">
+                <div className="absolute inset-0 bg-black/20"></div>
+                <img 
+                  src={constructionHero} 
+                  alt="Construction site overview" 
+                  className="absolute inset-0 w-full h-full object-cover mix-blend-overlay"
+                />
+                <div className="relative p-8 text-white">
+                  <h1 className="text-3xl font-bold mb-2">{selectedProject.name}</h1>
+                  <p className="text-xl opacity-90 mb-4">
+                    {selectedProject.location || 'Project location'} - {selectedProject.description || 'Construction project'}
+                  </p>
+                  <div className="flex items-center gap-6 text-sm">
+                    <div className="flex items-center gap-2">
+                      <Building2 className="h-4 w-4" />
+                      <span>Status: {selectedProject.status}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      <span>{stats.teamMembers} Team Members</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Target className="h-4 w-4" />
+                      <span>{selectedProject.progress || 0}% Complete</span>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
 
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <StatsCard
-              title="Selected Project"
-              value={selectedProject ? "1" : "0"}
-              change={selectedProject ? selectedProject.name : "Select a project"}
-              changeType="positive"
-              icon={Building2}
-              description={selectedProject ? selectedProject.status : "No project selected"}
-            />
-            <StatsCard
-              title="Team Members"
-              value={stats.teamMembers.toString()}
-              change={`${stats.teamMembers > 0 ? 'Active' : 'No'} members`}
-              changeType="positive"
-              icon={Users}
-              description="In this project"
-            />
-            <StatsCard
-              title="Open Tasks"
-              value={stats.openTasks.toString()}
-              change={`${stats.openTasks} pending`}
-              changeType={stats.openTasks > 10 ? "negative" : "positive"}
-              icon={CheckCircle}
-              description="Active tasks"
-            />
-            <StatsCard
-              title="Safety Days"
-              value={stats.safetyDays.toString()}
-              change="No incidents"
-              changeType="positive"
-              icon={AlertTriangle}
-              description="Days without incidents"
-            />
-          </div>
+              {/* Project Stats */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <Card className="shadow-soft">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Project Progress</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-foreground mb-2">{selectedProject.progress || 0}%</div>
+                    <Progress value={selectedProject.progress || 0} className="h-2" />
+                  </CardContent>
+                </Card>
 
-          {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            <div className="xl:col-span-1">
-              <ProjectProgress />
-            </div>
-            <div className="xl:col-span-1">
-              <RecentActivity />
-            </div>
-            <div className="xl:col-span-1">
-              <WeatherWidget />
-            </div>
-          </div>
+                <Card className="shadow-soft">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Budget Usage</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-foreground mb-2">{stats.budgetUtilization}%</div>
+                    <div className="text-sm text-muted-foreground">
+                      {stats.totalExpenses.toLocaleString()} MAD spent
+                    </div>
+                  </CardContent>
+                </Card>
 
-          {/* Secondary Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            <ProjectOverview />
-            <QuickActions />
-            <LiveUpdates />
-          </div>
+                <Card className="shadow-soft">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Active Tasks</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-foreground mb-2">{stats.openTasks}</div>
+                    <div className="text-sm text-muted-foreground">In progress</div>
+                  </CardContent>
+                </Card>
 
-          {/* Additional Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <StatsCard
-              title="Budget Utilization"
-              value={`${stats.budgetUtilization}%`}
-              change={selectedProject?.budget ? `${(selectedProject.spent || 0).toLocaleString()} MAD of ${selectedProject.budget.toLocaleString()} MAD` : "No budget set"}
-              changeType={stats.budgetUtilization > 80 ? "negative" : "positive"}
-              icon={TrendingUp}
-              description="Project budget usage"
-            />
-            <StatsCard
-              title="Schedule Performance"
-              value={`${stats.schedulePerformance}%`}
-              change="Project progress"
-              changeType={stats.schedulePerformance > 75 ? "positive" : "negative"}
-              icon={Clock}
-              description="Completion status"
-            />
-            <StatsCard
-              title="Project Status"
-              value={selectedProject?.status || "N/A"}
-              change={selectedProject ? "Active project" : "No project selected"}
-              changeType="positive"
-              icon={CheckCircle}
-              description={selectedProject ? "Current status" : "Select a project to begin"}
-            />
-          </div>
+                <Card className="shadow-soft">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Project Deadline</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-foreground mb-2">
+                      {getDaysUntilDeadline() !== null ? getDaysUntilDeadline() : 'N/A'}
+                    </div>
+                    <div className={`text-sm ${
+                      getDaysUntilDeadline() !== null && getDaysUntilDeadline()! < 0 
+                        ? 'text-destructive' 
+                        : getDaysUntilDeadline() !== null && getDaysUntilDeadline()! <= 7 
+                        ? 'text-warning' 
+                        : 'text-muted-foreground'
+                    }`}>
+                      {getDeadlineStatus(getDaysUntilDeadline())}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Budget Breakdown */}
+              <Card className="shadow-soft">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <DollarSign className="h-5 w-5" />
+                    Budget Overview
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                      <div className="text-sm text-muted-foreground">Total Budget</div>
+                      <div className="text-2xl font-bold text-foreground">
+                        {selectedProject.budget?.toLocaleString() || '0'} MAD
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-muted-foreground">Spent</div>
+                      <div className="text-2xl font-bold text-foreground">
+                        {stats.totalExpenses.toLocaleString()} MAD
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-muted-foreground">Remaining</div>
+                      <div className="text-2xl font-bold text-foreground">
+                        {selectedProject.budget 
+                          ? (selectedProject.budget - stats.totalExpenses).toLocaleString()
+                          : '0'
+                        } MAD
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-4">
+                    <Progress value={stats.budgetUtilization} className="h-3" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Active Tasks */}
+              <Card className="shadow-soft">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5" />
+                    Current Working Tasks
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {activeTasks.length === 0 ? (
+                    <p className="text-center text-muted-foreground py-8">No active tasks found</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {activeTasks.map((task) => (
+                        <div key={task.id} className="flex items-center justify-between p-4 bg-muted/20 rounded-lg">
+                          <div>
+                            <h4 className="font-medium text-foreground">{task.title}</h4>
+                            <p className="text-sm text-muted-foreground">{task.description}</p>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-sm font-medium text-foreground capitalize">
+                              {task.status.replace('_', ' ')}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No deadline'}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Project Timeline */}
+              <Card className="shadow-soft">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Calendar className="h-5 w-5" />
+                    Project Timeline
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <div className="text-sm text-muted-foreground">Start Date</div>
+                      <div className="text-lg font-semibold text-foreground">
+                        {selectedProject.start_date 
+                          ? new Date(selectedProject.start_date).toLocaleDateString()
+                          : 'Not set'
+                        }
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-muted-foreground">Expected End Date</div>
+                      <div className={`text-lg font-semibold ${
+                        getDaysUntilDeadline() !== null && getDaysUntilDeadline()! < 0 
+                          ? 'text-destructive' 
+                          : 'text-foreground'
+                      }`}>
+                        {selectedProject.end_date 
+                          ? new Date(selectedProject.end_date).toLocaleDateString()
+                          : 'Not set'
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
         </main>
       </div>
     </div>

@@ -1,74 +1,21 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BarChart3, Download, Calendar, TrendingUp, FileText, PieChart } from "lucide-react";
+import { BarChart3, Download, Calendar, TrendingUp, FileText, PieChart, Plus } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
-
-const reports = [
-  {
-    id: 1,
-    title: "Weekly Progress Report",
-    description: "Comprehensive weekly progress overview for all active projects",
-    type: "Progress",
-    frequency: "Weekly",
-    lastGenerated: "Nov 25, 2024",
-    nextScheduled: "Dec 2, 2024",
-    status: "Available",
-    projects: ["Downtown Office Complex", "Residential Tower Phase 2"],
-    size: "2.4 MB"
-  },
-  {
-    id: 2,
-    title: "Budget Analysis Report",
-    description: "Financial performance and budget utilization across all projects",
-    type: "Financial",
-    frequency: "Monthly",
-    lastGenerated: "Nov 1, 2024",
-    nextScheduled: "Dec 1, 2024",
-    status: "Generating",
-    projects: ["All Projects"],
-    size: "1.8 MB"
-  },
-  {
-    id: 3,
-    title: "Safety Inspection Summary",
-    description: "Safety compliance and incident reports for the past month",
-    type: "Safety",
-    frequency: "Monthly",
-    lastGenerated: "Nov 20, 2024",
-    nextScheduled: "Dec 20, 2024",
-    status: "Available",
-    projects: ["Industrial Warehouse", "Shopping Center Renovation"],
-    size: "950 KB"
-  },
-  {
-    id: 4,
-    title: "Material Usage Report",
-    description: "Material consumption and inventory levels analysis",
-    type: "Inventory",
-    frequency: "Bi-weekly",
-    lastGenerated: "Nov 15, 2024",
-    nextScheduled: "Nov 29, 2024",
-    status: "Overdue",
-    projects: ["All Projects"],
-    size: "1.2 MB"
-  },
-  {
-    id: 5,
-    title: "Labor Productivity Analysis",
-    description: "Workforce efficiency and productivity metrics",
-    type: "Labor",
-    frequency: "Monthly",
-    lastGenerated: "Oct 30, 2024",
-    nextScheduled: "Nov 30, 2024",
-    status: "Scheduled",
-    projects: ["Downtown Office Complex", "Industrial Warehouse"],
-    size: "3.1 MB"
-  }
-];
+import AddReportDialog from "@/components/dialogs/AddReportDialog";
+import { useProject } from "@/contexts/ProjectContext";
+import { useState } from "react";
 
 const Reports = () => {
+  const { selectedProject } = useProject();
+  const [reports, setReports] = useState<any[]>([]);
+  const [showAddDialog, setShowAddDialog] = useState(false);
+
+  const handleReportAdded = (newReport: any) => {
+    setReports([...reports, newReport]);
+  };
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Available":
@@ -131,12 +78,32 @@ const Reports = () => {
             </div>
             <div className="flex gap-2">
               <Button variant="outline">Schedule Report</Button>
-              <Button>Custom Report</Button>
+              <Button className="gap-2" onClick={() => setShowAddDialog(true)}>
+                <Plus className="h-4 w-4" />
+                Create Report
+              </Button>
             </div>
           </div>
 
-          <div className="grid gap-4">
-            {reports.map((report) => (
+          {!selectedProject ? (
+            <div className="text-center py-12">
+              <FileText className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+              <h2 className="text-xl font-semibold text-foreground mb-2">No Project Selected</h2>
+              <p className="text-muted-foreground">Please select a project to manage reports</p>
+            </div>
+          ) : reports.length === 0 ? (
+            <div className="text-center py-12">
+              <FileText className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+              <h2 className="text-xl font-semibold text-foreground mb-2">No Reports Created</h2>
+              <p className="text-muted-foreground mb-4">Create your first report to get started</p>
+              <Button className="gap-2" onClick={() => setShowAddDialog(true)}>
+                <Plus className="h-4 w-4" />
+                Create Report
+              </Button>
+            </div>
+          ) : (
+            <div className="grid gap-4">
+              {reports.map((report) => (
               <Card key={report.id} className="shadow-soft hover:shadow-medium transition-all duration-300">
                 <CardHeader>
                   <div className="flex justify-between items-start">
@@ -231,8 +198,14 @@ const Reports = () => {
                   )}
                 </CardContent>
               </Card>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
+          <AddReportDialog
+            open={showAddDialog}
+            onOpenChange={setShowAddDialog}
+            onReportAdded={handleReportAdded}
+          />
         </main>
       </div>
     </div>

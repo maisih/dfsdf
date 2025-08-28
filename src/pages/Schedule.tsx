@@ -1,146 +1,49 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
-import { Calendar, DollarSign, TrendingUp, Target, Users, Clock, MapPin } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Calendar, Plus, Clock, MapPin, Users } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
+import AddEventDialog from "@/components/dialogs/AddEventDialog";
 import { useProject } from "@/contexts/ProjectContext";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { format } from "date-fns";
 
 const Schedule = () => {
-  const { selectedProject, loadProjects } = useProject();
-  const [budgetUsed, setBudgetUsed] = useState(0);
-  const [progressPercentage, setProgressPercentage] = useState(0);
-  const [newProgress, setNewProgress] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [upcomingTasks, setUpcomingTasks] = useState<any[]>([]);
-  const [teamMembers, setTeamMembers] = useState<any[]>([]);
-  const { toast } = useToast();
+  const { selectedProject } = useProject();
+  const [events, setEvents] = useState<any[]>([]);
+  const [showAddDialog, setShowAddDialog] = useState(false);
 
-  useEffect(() => {
-    if (selectedProject) {
-      calculateProgress();
-      loadUpcomingTasks();
-      loadTeamMembers();
-    } else {
-      setUpcomingTasks([]);
-      setTeamMembers([]);
-    }
-  }, [selectedProject]);
+  const handleEventAdded = (newEvent: any) => {
+    setEvents([...events, newEvent]);
+  };
 
-  const loadTeamMembers = async () => {
-    if (!selectedProject) return;
-    
-    try {
-      const { data, error } = await supabase
-        .from('team_members')
-        .select('*')
-        .eq('project_id', selectedProject.id)
-        .order('name', { ascending: true })
-        .limit(6);
-      
-      if (error) throw error;
-      setTeamMembers(data || []);
-    } catch (error) {
-      console.error('Error loading team members:', error);
+  const getEventTypeColor = (type: string) => {
+    switch (type) {
+      case "Meeting":
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      case "Inspection":
+        return "bg-orange-100 text-orange-800 border-orange-200";
+      case "Delivery":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "Milestone":
+        return "bg-purple-100 text-purple-800 border-purple-200";
+      case "Safety":
+        return "bg-red-100 text-red-800 border-red-200";
+      case "Training":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
 
-  const loadUpcomingTasks = async () => {
-    if (!selectedProject) return;
-    
-    try {
-      const { data, error } = await supabase
-        .from('tasks')
-        .select('*')
-        .eq('project_id', selectedProject.id)
-        .neq('status', 'completed')
-        .order('due_date', { ascending: true })
-        .limit(5);
-      
-      if (error) throw error;
-      setUpcomingTasks(data || []);
-    } catch (error) {
-      console.error('Error loading upcoming tasks:', error);
-    }
+  const isEventUpcoming = (eventDate: string) => {
+    const today = new Date();
+    const event = new Date(eventDate);
+    return event >= today;
   };
 
-  const calculateProgress = async () => {
-    if (!selectedProject || !selectedProject.budget) return;
-
-    try {
-      // Get total expenses for this project
-      const { data: expenses, error } = await supabase
-        .from('expenses')
-        .select('amount')
-        .eq('project_id', selectedProject.id);
-
-      if (error) throw error;
-
-      const totalSpent = expenses?.reduce((sum, expense) => sum + (expense.amount || 0), 0) || 0;
-      setBudgetUsed(totalSpent);
-      
-      // Calculate progress percentage based on budget usage
-      const percentage = selectedProject.budget > 0 ? Math.min((totalSpent / selectedProject.budget) * 100, 100) : 0;
-      setProgressPercentage(Math.round(percentage));
-    } catch (error) {
-      console.error('Error calculating progress:', error);
-    }
-  };
-
-  const updateProjectProgress = async () => {
-    if (!selectedProject || !newProgress) return;
-
-    setIsLoading(true);
-    try {
-      const progressValue = parseInt(newProgress);
-      
-      const { error } = await supabase
-        .from('projects')
-        .update({ 
-          progress: progressValue,
-          spent: budgetUsed
-        })
-        .eq('id', selectedProject.id);
-
-      if (error) throw error;
-
-      await loadProjects();
-      
-      toast({
-        title: "Progress Updated",
-        description: `Project progress updated to ${progressValue}%`,
-      });
-      
-      setNewProgress('');
-    } catch (error) {
-      console.error('Error updating progress:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update project progress.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const getProgressColor = (percentage: number) => {
-    if (percentage < 30) return "bg-success";
-    if (percentage < 70) return "bg-warning";
-    return "bg-destructive";
-  };
-
-  const getStatusText = (percentage: number) => {
-    if (percentage < 25) return "On Track";
-    if (percentage < 50) return "Progressing";
-    if (percentage < 75) return "Advanced";
-    return "Near Completion";
-  };
+  const sortedEvents = events.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   return (
     <div className="min-h-screen bg-background">
@@ -150,170 +53,120 @@ const Schedule = () => {
         <main className="flex-1 p-6">
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h1 className="text-3xl font-bold text-foreground">Schedule & Progress</h1>
-              <p className="text-muted-foreground">Track project progress, upcoming activities, and team</p>
+              <h1 className="text-3xl font-bold text-foreground">Project Schedule</h1>
+              <p className="text-muted-foreground">Manage upcoming events and project timeline</p>
             </div>
+            <Button className="gap-2" onClick={() => setShowAddDialog(true)}>
+              <Plus className="h-4 w-4" />
+              Schedule Event
+            </Button>
           </div>
 
           {!selectedProject ? (
             <div className="text-center py-12">
-              <p className="text-muted-foreground">Please select a project to view progress</p>
+              <Calendar className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+              <h2 className="text-xl font-semibold text-foreground mb-2">No Project Selected</h2>
+              <p className="text-muted-foreground">Please select a project to manage the schedule</p>
             </div>
           ) : (
             <div className="grid gap-6">
-              {/* Project Overview Card */}
+              {/* Project Timeline Overview */}
               <Card className="shadow-soft">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Calendar className="h-5 w-5" />
-                    {selectedProject.name}
+                    {selectedProject.name} - Timeline
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-primary">{progressPercentage}%</div>
-                      <p className="text-sm text-muted-foreground">Budget Used</p>
+                      <div className="text-sm text-muted-foreground">Start Date</div>
+                      <div className="text-lg font-semibold text-foreground">
+                        {selectedProject.start_date 
+                          ? format(new Date(selectedProject.start_date), 'MMM dd, yyyy')
+                          : 'Not set'
+                        }
+                      </div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-foreground">
+                      <div className="text-sm text-muted-foreground">End Date</div>
+                      <div className="text-lg font-semibold text-foreground">
+                        {selectedProject.end_date 
+                          ? format(new Date(selectedProject.end_date), 'MMM dd, yyyy')
+                          : 'Not set'
+                        }
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm text-muted-foreground">Progress</div>
+                      <div className="text-lg font-semibold text-foreground">
                         {selectedProject.progress || 0}%
                       </div>
-                      <p className="text-sm text-muted-foreground">Project Progress</p>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-lg font-medium text-muted-foreground">
-                        {getStatusText(selectedProject.progress || 0)}
-                      </div>
-                      <p className="text-sm text-muted-foreground">Status</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <div className="flex justify-between text-sm">
-                      <span>Project Progress</span>
-                      <span>{selectedProject.progress || 0}%</span>
-                    </div>
-                    <Progress 
-                      value={selectedProject.progress || 0} 
-                      className="h-3" 
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Budget Analysis Card */}
-              <Card className="shadow-soft">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <DollarSign className="h-5 w-5" />
-                    Budget Analysis
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-4">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Total Budget:</span>
-                        <span className="font-semibold">
-                          {selectedProject.budget?.toLocaleString() || '0'} MAD
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Amount Spent:</span>
-                        <span className="font-semibold">
-                          {budgetUsed.toLocaleString()} MAD
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Remaining:</span>
-                        <span className="font-semibold">
-                          {selectedProject.budget 
-                            ? (selectedProject.budget - budgetUsed).toLocaleString()
-                            : '0'
-                          } MAD
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="space-y-3">
-                      <div className="flex justify-between text-sm">
-                        <span>Budget Utilization</span>
-                        <span>{progressPercentage}%</span>
-                      </div>
-                      <Progress 
-                        value={progressPercentage} 
-                        className={`h-3 ${getProgressColor(progressPercentage)}`}
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Based on recorded expenses
-                      </p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Update Progress Card */}
-              <Card className="shadow-soft">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Target className="h-5 w-5" />
-                    Update Project Progress
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex gap-4 items-end">
-                    <div className="flex-1">
-                      <Label htmlFor="progress">Progress Percentage (0-100)</Label>
-                      <Input
-                        id="progress"
-                        type="number"
-                        min="0"
-                        max="100"
-                        value={newProgress}
-                        onChange={(e) => setNewProgress(e.target.value)}
-                        placeholder="Enter progress percentage"
-                      />
-                    </div>
-                    <Button 
-                      onClick={updateProjectProgress}
-                      disabled={!newProgress || isLoading}
-                    >
-                      {isLoading ? "Updating..." : "Update Progress"}
-                    </Button>
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Manually set the project completion percentage
-                  </p>
-                </CardContent>
-              </Card>
-
-              {/* Upcoming Activities */}
+              {/* Upcoming Events */}
               <Card className="shadow-soft">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Clock className="h-5 w-5" />
-                    Upcoming Activities
+                    Upcoming Events
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {upcomingTasks.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-8">No upcoming activities scheduled</p>
+                  {events.length === 0 ? (
+                    <div className="text-center py-12">
+                      <Clock className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                      <h3 className="text-lg font-semibold text-foreground mb-2">No Events Scheduled</h3>
+                      <p className="text-muted-foreground mb-4">Schedule your first event to get started</p>
+                      <Button className="gap-2" onClick={() => setShowAddDialog(true)}>
+                        <Plus className="h-4 w-4" />
+                        Schedule Event
+                      </Button>
+                    </div>
                   ) : (
                     <div className="space-y-4">
-                      {upcomingTasks.map((task) => (
-                        <div key={task.id} className="flex items-center justify-between p-4 bg-muted/20 rounded-lg">
-                          <div className="flex-1">
-                            <h4 className="font-medium text-foreground">{task.title}</h4>
-                            <p className="text-sm text-muted-foreground">{task.description}</p>
+                      {sortedEvents.map((event) => (
+                        <div key={event.id} className="flex items-center justify-between p-4 bg-muted/20 rounded-lg">
+                          <div className="flex items-center gap-4">
+                            <div className="text-center">
+                              <div className="text-sm font-semibold text-foreground">
+                                {format(new Date(event.date), 'MMM')}
+                              </div>
+                              <div className="text-lg font-bold text-primary">
+                                {format(new Date(event.date), 'dd')}
+                              </div>
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h4 className="font-medium text-foreground">{event.title}</h4>
+                                <Badge variant="outline" className={getEventTypeColor(event.type)}>
+                                  {event.type}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground">{event.description}</p>
+                              <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                                <div className="flex items-center gap-1">
+                                  <Clock className="h-3 w-3" />
+                                  {event.time}
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <Calendar className="h-3 w-3" />
+                                  {format(new Date(event.date), 'EEEE, MMM dd, yyyy')}
+                                </div>
+                              </div>
+                            </div>
                           </div>
                           <div className="text-right">
-                            <div className="text-sm font-medium text-foreground">
-                              {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No due date'}
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              {task.assigned_to || 'Unassigned'}
-                            </div>
+                            <Badge 
+                              variant={isEventUpcoming(event.date) ? "default" : "secondary"}
+                              className="text-xs"
+                            >
+                              {isEventUpcoming(event.date) ? "Upcoming" : "Past"}
+                            </Badge>
                           </div>
                         </div>
                       ))}
@@ -322,44 +175,51 @@ const Schedule = () => {
                 </CardContent>
               </Card>
 
-              {/* Team Section */}
+              {/* Period Summary */}
               <Card className="shadow-soft">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5" />
-                    Project Team
+                    <Calendar className="h-5 w-5" />
+                    This Month Summary
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {teamMembers.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-8">No team members assigned to this project</p>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {teamMembers.map((member) => (
-                        <div key={member.id} className="p-4 bg-muted/20 rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
-                              <span className="text-primary font-medium">
-                                {member.name.split(' ').map((n: string) => n[0]).join('')}
-                              </span>
-                            </div>
-                            <div className="flex-1">
-                              <h4 className="font-medium text-foreground">{member.name}</h4>
-                              <p className="text-sm text-muted-foreground">{member.profession}</p>
-                              <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                                <MapPin className="h-3 w-3" />
-                                {member.phone || member.email || 'No contact info'}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
+                    <div>
+                      <div className="text-2xl font-bold text-primary">
+                        {events.filter(e => isEventUpcoming(e.date)).length}
+                      </div>
+                      <div className="text-sm text-muted-foreground">Upcoming Events</div>
                     </div>
-                  )}
+                    <div>
+                      <div className="text-2xl font-bold text-foreground">
+                        {events.filter(e => e.type === 'Meeting').length}
+                      </div>
+                      <div className="text-sm text-muted-foreground">Meetings</div>
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold text-foreground">
+                        {events.filter(e => e.type === 'Milestone').length}
+                      </div>
+                      <div className="text-sm text-muted-foreground">Milestones</div>
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold text-foreground">
+                        {events.filter(e => e.type === 'Inspection').length}
+                      </div>
+                      <div className="text-sm text-muted-foreground">Inspections</div>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </div>
           )}
+          
+          <AddEventDialog
+            open={showAddDialog}
+            onOpenChange={setShowAddDialog}
+            onEventAdded={handleEventAdded}
+          />
         </main>
       </div>
     </div>
