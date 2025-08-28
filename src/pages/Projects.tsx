@@ -2,12 +2,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Plus, MapPin, Calendar, DollarSign } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Plus, MapPin, Calendar, DollarSign, Trash2, Eye } from "lucide-react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
 import AddProjectDialog from "@/components/dialogs/AddProjectDialog";
 import EditProjectDialog from "@/components/dialogs/EditProjectDialog";
 import { useProject } from "@/contexts/ProjectContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const projects = [
   {
@@ -61,7 +66,34 @@ const projects = [
 ];
 
 const Projects = () => {
-  const { projects } = useProject();
+  const { projects, loadProjects, setSelectedProject } = useProject();
+  const navigate = useNavigate();
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
+
+  const handleViewDetails = (project: any) => {
+    setSelectedProject(project);
+    navigate('/');
+  };
+
+  const handleDeleteProject = async (projectId: string) => {
+    setIsDeleting(projectId);
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', projectId);
+
+      if (error) throw error;
+
+      toast.success('Project deleted successfully');
+      loadProjects();
+    } catch (error) {
+      console.error('Error deleting project:', error);
+      toast.error('Failed to delete project');
+    } finally {
+      setIsDeleting(null);
+    }
+  };
   
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -141,9 +173,46 @@ const Projects = () => {
                     <div className="space-y-2">
                       <div className="text-sm text-muted-foreground">Project Manager</div>
                       <div className="font-medium">{project.created_by || 'Unassigned'}</div>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm">View Details</Button>
+                      <div className="flex gap-2 flex-wrap">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => handleViewDetails(project)}
+                        >
+                          <Eye className="h-4 w-4 mr-1" />
+                          View Details
+                        </Button>
                         <EditProjectDialog project={project} />
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="text-destructive hover:text-destructive"
+                              disabled={isDeleting === project.id}
+                            >
+                              <Trash2 className="h-4 w-4 mr-1" />
+                              {isDeleting === project.id ? 'Deleting...' : 'Delete'}
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Project</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete "{project.name}"? This action cannot be undone and will remove all associated data.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction 
+                                onClick={() => handleDeleteProject(project.id)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Delete Project
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </div>
                   </div>
