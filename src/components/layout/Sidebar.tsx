@@ -10,7 +10,8 @@ import {
   Wrench,
   DollarSign,
   BarChart3,
-  FileText
+  FileText,
+  Brain
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLocation, Link } from "react-router-dom";
@@ -74,6 +75,11 @@ const navigation = [
     name: "Documents",
     icon: FileText,
     href: "/documents",
+  },
+  {
+    name: "AI Assistant",
+    icon: Brain,
+    href: "/ai",
   }
 ];
 

@@ -8,6 +8,10 @@ import { useProject } from "@/contexts/ProjectContext";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import WeatherWidget from "@/components/weather/WeatherWidget";
+import QuickActions from "@/components/dashboard/QuickActions";
+import RecentActivity from "@/components/dashboard/RecentActivity";
+import ProjectOverview from "@/components/dashboard/ProjectOverview";
+import AIInsights from "@/components/dashboard/AIInsights";
 
 const Index = () => {
   const { selectedProject } = useProject();
