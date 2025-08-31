@@ -2,18 +2,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Clock, User, DollarSign, Calendar } from "lucide-react";
+import { Plus, Clock, User, DollarSign, Calendar, MessageCircle } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
 import AddTaskDialog from "@/components/dialogs/AddTaskDialog";
+import EditTaskDialog from "@/components/dialogs/EditTaskDialog";
+import DeleteTaskDialog from "@/components/dialogs/DeleteTaskDialog";
+import UpdateTaskCostDialog from "@/components/dialogs/UpdateTaskCostDialog";
 import { useProject } from "@/contexts/ProjectContext";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const Tasks = () => {
   const { selectedProject } = useProject();
   const [tasks, setTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (selectedProject) {
@@ -78,6 +83,37 @@ const Tasks = () => {
     }
   };
 
+  const handleStatusChange = async (taskId: string, currentStatus: string) => {
+    const newStatus = currentStatus === 'completed' ? 'pending' : 'completed';
+    
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ 
+          status: newStatus,
+          completed_at: newStatus === 'completed' ? new Date().toISOString() : null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', taskId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `Task marked as ${newStatus.replace('_', ' ')}!`,
+      });
+
+      loadTasks(); // Refresh the tasks list
+    } catch (error) {
+      console.error('Error updating task status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update task status. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -113,6 +149,7 @@ const Tasks = () => {
                     <Checkbox 
                       checked={task.status === 'completed'}
                       className="mt-1"
+                      onCheckedChange={() => handleStatusChange(task.id, task.status)}
                     />
                     
                     <div className="flex-1">
@@ -153,11 +190,19 @@ const Tasks = () => {
                          </div>
                        </div>
                       
-                       <div className="flex gap-2">
-                         <Button variant="outline" size="sm">Edit</Button>
-                         <Button variant="outline" size="sm">Comments</Button>
-                         <Button variant="outline" size="sm">Update Cost</Button>
-                       </div>
+                       <div className="flex gap-2 flex-wrap">
+                          <EditTaskDialog task={task} onTaskUpdated={loadTasks} />
+                          <Button variant="outline" size="sm">
+                            <MessageCircle className="h-4 w-4 mr-1" />
+                            Comments
+                          </Button>
+                          <UpdateTaskCostDialog task={task} onTaskUpdated={loadTasks} />
+                          <DeleteTaskDialog 
+                            taskId={task.id} 
+                            taskTitle={task.title} 
+                            onTaskDeleted={loadTasks} 
+                          />
+                        </div>
                     </div>
                   </div>
                 </CardContent>
