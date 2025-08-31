@@ -5,6 +5,8 @@ import { Plus, Users, Phone, Mail, Calendar } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
 import AddTeamMemberDialog from "@/components/dialogs/AddTeamMemberDialog";
+import EditTeamMemberDialog from "@/components/dialogs/EditTeamMemberDialog";
+import ContactTeamMemberDialog from "@/components/dialogs/ContactTeamMemberDialog";
 import { useProject } from "@/contexts/ProjectContext";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -130,12 +132,8 @@ const Team = () => {
                     </div>
                     
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm" className="flex-1">
-                        Edit
-                      </Button>
-                      <Button variant="outline" size="sm" className="flex-1">
-                        Contact
-                      </Button>
+                      <EditTeamMemberDialog member={member} onMemberUpdated={loadTeamMembers} />
+                      <ContactTeamMemberDialog member={member} />
                     </div>
                   </CardContent>
                 </Card>
