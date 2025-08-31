@@ -1,7 +1,25 @@
-import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Cloud, Sun, CloudRain, CloudSnow, MapPin } from "lucide-react";
-import { useProject } from "@/contexts/ProjectContext";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { 
+  Cloud, 
+  Sun, 
+  CloudRain, 
+  CloudSnow, 
+  CloudLightning, 
+  Wind,
+  Droplets,
+  Thermometer,
+  AlertTriangle,
+  CheckCircle,
+  Brain,
+  Loader2,
+  MapPin
+} from "lucide-react";
+import { useProject } from "@/contexts/ProjectContext";  
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface WeatherData {
   date: string;
@@ -15,11 +33,15 @@ interface WeatherData {
 const WeatherWidget = () => {
   const { selectedProject } = useProject();
   const [weatherData, setWeatherData] = useState<WeatherData[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [aiAnalysis, setAiAnalysis] = useState<string>("");
+  const [riskFactors, setRiskFactors] = useState<any>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const { toast } = useToast();
 
   // Mock weather data for Morocco cities (in a real app, you'd use an actual weather API)
   const generateMockWeather = (city: string): WeatherData[] => {
-    const conditions = ['Sunny', 'Partly Cloudy', 'Cloudy', 'Light Rain', 'Clear'];
+    const conditions = ['Sunny', 'Partly Cloudy', 'Cloudy', 'Light Rain', 'Clear', 'Heavy Rain', 'Storm'];
     const baseTemp = city === 'Casablanca' ? 20 : city === 'Marrakech' ? 25 : 18;
     
     return Array.from({ length: 7 }, (_, i) => {
@@ -31,10 +53,75 @@ const WeatherWidget = () => {
         temperature: baseTemp + Math.floor(Math.random() * 10) - 5,
         condition: conditions[Math.floor(Math.random() * conditions.length)],
         humidity: 50 + Math.floor(Math.random() * 30),
-        windSpeed: 5 + Math.floor(Math.random() * 15),
+        windSpeed: 5 + Math.floor(Math.random() * 25),
         icon: conditions[Math.floor(Math.random() * conditions.length)]
       };
     });
+  };
+
+  const analyzeWeatherRisks = async () => {
+    if (!selectedProject || !weatherData.length) return;
+
+    setAiLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('ai-weather-analyzer', {
+        body: { 
+          weatherData,
+          projectLocation: selectedProject.location || 'Construction Site',
+          projectType: 'construction'
+        }
+      });
+
+      if (error) throw error;
+
+      setAiAnalysis(data.analysis);
+      setRiskFactors(data.riskFactors);
+
+      toast({
+        title: "Weather Analysis Complete",
+        description: `AI analyzed ${data.totalDays} days of weather with ${data.workableDays} workable days identified.`
+      });
+
+    } catch (error) {
+      console.error('Weather analysis error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to analyze weather risks. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const getRiskColor = (risk: string) => {
+    switch (risk) {
+      case 'high': return 'destructive';
+      case 'medium': return 'secondary';
+      case 'low': return 'default';
+      default: return 'outline';
+    }
+  };
+
+  const getWeatherIcon = (condition: string) => {
+    switch (condition.toLowerCase()) {
+      case 'sunny':
+      case 'clear':
+        return Sun;
+      case 'partly cloudy':
+      case 'cloudy':
+        return Cloud;
+      case 'light rain':
+      case 'rain':
+        return CloudRain;
+      case 'heavy rain':
+      case 'storm':
+        return CloudLightning;
+      case 'snow':
+        return CloudSnow;
+      default:
+        return Sun;
+    }
   };
 
   useEffect(() => {
@@ -45,96 +132,163 @@ const WeatherWidget = () => {
         setWeatherData(generateMockWeather(selectedProject.location));
         setLoading(false);
       }, 1000);
+    } else {
+      setWeatherData([]);
+      setLoading(false);
     }
   }, [selectedProject]);
-
-  const getWeatherIcon = (condition: string) => {
-    switch (condition.toLowerCase()) {
-      case 'sunny':
-      case 'clear':
-        return <Sun className="h-6 w-6 text-yellow-500" />;
-      case 'partly cloudy':
-      case 'cloudy':
-        return <Cloud className="h-6 w-6 text-gray-500" />;
-      case 'light rain':
-      case 'rain':
-        return <CloudRain className="h-6 w-6 text-blue-500" />;
-      default:
-        return <Sun className="h-6 w-6 text-yellow-500" />;
-    }
-  };
-
-  if (!selectedProject) {
-    return (
-      <Card className="shadow-soft">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Cloud className="h-5 w-5" />
-            Weather Forecast
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">Select a project to view weather forecast</p>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <Card className="shadow-soft">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Cloud className="h-5 w-5" />
-          7-Day Weather Forecast
+          Weather Forecast & AI Risk Analysis
         </CardTitle>
-        <div className="flex items-center gap-1 text-sm text-muted-foreground">
-          <MapPin className="h-4 w-4" />
-          {selectedProject.location}, Morocco
-        </div>
+        {selectedProject?.location && (
+          <div className="flex items-center gap-1 text-sm text-muted-foreground">
+            <MapPin className="h-4 w-4" />
+            {selectedProject.location}, Morocco
+          </div>
+        )}
       </CardHeader>
       <CardContent>
-        {loading ? (
+        {!selectedProject ? (
+          <p className="text-muted-foreground text-sm">Select a project to view weather forecast</p>
+        ) : loading ? (
           <div className="space-y-3">
-            {Array.from({ length: 7 }).map((_, i) => (
-              <div key={i} className="flex items-center justify-between p-2 bg-muted/20 rounded animate-pulse">
-                <div className="h-4 bg-muted rounded w-16"></div>
-                <div className="h-6 bg-muted rounded w-6"></div>
-                <div className="h-4 bg-muted rounded w-12"></div>
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-muted rounded animate-pulse" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 bg-muted rounded animate-pulse" />
+                  <div className="h-3 bg-muted rounded animate-pulse w-2/3" />
+                </div>
               </div>
             ))}
           </div>
         ) : (
-          <div className="space-y-3">
-            {weatherData.map((day, index) => (
-              <div key={index} className={`flex items-center justify-between p-3 rounded-lg transition-colors hover:bg-muted/20 ${index === 0 ? 'bg-primary/5 border border-primary/20' : ''}`}>
-                <div className="flex-1">
-                  <div className="font-medium text-sm">{day.date}</div>
-                  <div className="text-xs text-muted-foreground">{day.condition}</div>
-                </div>
-                <div className="flex items-center gap-3">
-                  {getWeatherIcon(day.condition)}
-                  <div className="text-right">
-                    <div className="font-bold">{day.temperature}°C</div>
-                    <div className="text-xs text-muted-foreground">{day.humidity}% humidity</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-        
-        {!loading && weatherData.length > 0 && (
-          <div className="mt-4 pt-4 border-t border-border">
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="text-muted-foreground">Wind Speed:</span>
-                <span className="ml-2 font-medium">{weatherData[0].windSpeed} km/h</span>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Humidity:</span>
-                <span className="ml-2 font-medium">{weatherData[0].humidity}%</span>
-              </div>
+          <div className="space-y-4">
+            {/* AI Analysis Button and Risk Summary */}
+            <div className="flex gap-2 mb-4">
+              <Button 
+                onClick={analyzeWeatherRisks} 
+                disabled={aiLoading}
+                size="sm"
+                className="flex-1"
+              >
+                {aiLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Analyzing...
+                  </>
+                ) : (
+                  <>
+                    <Brain className="h-4 w-4 mr-2" />
+                    AI Weather Risk Analysis
+                  </>
+                )}
+              </Button>
             </div>
+
+            {riskFactors && (
+              <div className="grid grid-cols-2 gap-2 p-3 bg-muted rounded-lg mb-4">
+                <div className="flex items-center gap-2">
+                  <Wind className="h-4 w-4" />
+                  <span className="text-xs">Wind:</span>
+                  <Badge variant={getRiskColor(riskFactors.windRisk)} className="text-xs">
+                    {riskFactors.windRisk}
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CloudRain className="h-4 w-4" />
+                  <span className="text-xs">Rain:</span>
+                  <Badge variant={getRiskColor(riskFactors.rainRisk)} className="text-xs">
+                    {riskFactors.rainRisk}
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Thermometer className="h-4 w-4" />
+                  <span className="text-xs">Temperature:</span>
+                  <Badge variant={getRiskColor(riskFactors.temperatureRisk)} className="text-xs">
+                    {riskFactors.temperatureRisk}
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Droplets className="h-4 w-4" />
+                  <span className="text-xs">Humidity:</span>
+                  <Badge variant={getRiskColor(riskFactors.humidityRisk)} className="text-xs">
+                    {riskFactors.humidityRisk}
+                  </Badge>
+                </div>
+              </div>
+            )}
+
+            {/* Weather Forecast */}
+            <div className="space-y-3">
+              {weatherData.slice(0, 5).map((day, index) => {
+                const Icon = getWeatherIcon(day.condition);
+                const isHighRisk = day.condition.toLowerCase().includes('storm') || 
+                                 day.condition.toLowerCase().includes('heavy rain') ||
+                                 day.windSpeed > 25;
+                
+                return (
+                  <div key={index} className={`flex items-center justify-between p-3 rounded-lg border ${
+                    isHighRisk ? 'border-destructive/20 bg-destructive/5' : 'border-border'
+                  }`}>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        <Icon className="h-6 w-6 text-muted-foreground" />
+                        {isHighRisk && <AlertTriangle className="h-4 w-4 text-destructive" />}
+                      </div>
+                      <div>
+                        <p className="font-medium text-sm">{day.date}</p>
+                        <p className="text-xs text-muted-foreground">{day.condition}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge variant="outline" className="text-xs">
+                            <Thermometer className="h-3 w-3 mr-1" />
+                            {day.temperature}°C
+                          </Badge>
+                          <Badge variant="outline" className="text-xs">
+                            <Droplets className="h-3 w-3 mr-1" />
+                            {day.humidity}%
+                          </Badge>
+                          <Badge variant="outline" className="text-xs">
+                            <Wind className="h-3 w-3 mr-1" />
+                            {day.windSpeed} km/h
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      {isHighRisk ? (
+                        <Badge variant="destructive" className="text-xs">
+                          High Risk
+                        </Badge>
+                      ) : (
+                        <Badge variant="default" className="text-xs">
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          Safe
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* AI Analysis Results */}
+            {aiAnalysis && (
+              <div className="mt-4 p-4 bg-muted rounded-lg">
+                <h4 className="font-semibold mb-2 flex items-center gap-2">
+                  <Brain className="h-4 w-4" />
+                  AI Weather Risk Analysis
+                </h4>
+                <div className="text-sm text-muted-foreground whitespace-pre-wrap max-h-60 overflow-y-auto">
+                  {aiAnalysis}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </CardContent>

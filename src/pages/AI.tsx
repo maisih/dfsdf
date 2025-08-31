@@ -4,7 +4,7 @@ import { Bot, AlertTriangle, DollarSign, Camera, Brain } from "lucide-react";
 import AIProjectAssistant from "@/components/ai/AIProjectAssistant";
 import AIRiskAnalyzer from "@/components/ai/AIRiskAnalyzer";
 import AICostOptimizer from "@/components/ai/AICostOptimizer";
-import AIPhotoAnalyzer from "@/components/ai/AIPhotoAnalyzer";
+import WeatherPhotoAnalyzer from "@/components/weather/WeatherPhotoAnalyzer";
 import { useProject } from "@/contexts/ProjectContext";
 
 const AI = () => {
@@ -51,7 +51,7 @@ const AI = () => {
             </TabsTrigger>
             <TabsTrigger value="photo" className="flex items-center gap-2">
               <Camera className="h-4 w-4" />
-              Photo Analysis
+              Weather Photos
             </TabsTrigger>
           </TabsList>
 
@@ -68,7 +68,7 @@ const AI = () => {
           </TabsContent>
 
           <TabsContent value="photo">
-            <AIPhotoAnalyzer />
+            <WeatherPhotoAnalyzer />
           </TabsContent>
         </Tabs>
       )}
@@ -115,10 +115,10 @@ const AI = () => {
             <div className="space-y-2">
               <h4 className="font-semibold flex items-center gap-2">
                 <Camera className="h-4 w-4 text-purple-500" />
-                Photo Analysis
+                Weather Photo Analysis
               </h4>
               <p className="text-sm text-muted-foreground">
-                Analyze construction photos for progress tracking, safety compliance, and quality control using computer vision.
+                Analyze construction photos for weather damage, protection issues, and get AI-powered solutions for weather-related problems.
               </p>
             </div>
           </div>
