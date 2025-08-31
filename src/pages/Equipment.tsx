@@ -1,9 +1,10 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Wrench, MapPin, Calendar, AlertTriangle } from "lucide-react";
+import { Plus, Wrench, MapPin, Calendar, AlertTriangle, History, FileText } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
+import EditEquipmentDialog from "@/components/dialogs/EditEquipmentDialog";
 import { useProject } from "@/contexts/ProjectContext";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -185,9 +186,15 @@ const Equipment = () => {
                         </div>
                         
                         <div className="flex gap-2">
-                          <Button variant="outline" size="sm">Edit</Button>
-                          <Button variant="outline" size="sm">Log Entry</Button>
-                          <Button variant="outline" size="sm">History</Button>
+                          <EditEquipmentDialog equipment={item} onEquipmentUpdated={loadEquipment} />
+                          <Button variant="outline" size="sm">
+                            <FileText className="h-4 w-4 mr-1" />
+                            Log Entry
+                          </Button>
+                          <Button variant="outline" size="sm">
+                            <History className="h-4 w-4 mr-1" />
+                            History
+                          </Button>
                         </div>
                       </div>
                     </CardContent>

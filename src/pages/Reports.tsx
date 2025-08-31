@@ -1,20 +1,74 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BarChart3, Download, Calendar, TrendingUp, FileText, PieChart, Plus } from "lucide-react";
+import { BarChart3, Download, Calendar, TrendingUp, FileText, PieChart, Plus, Eye, Settings, Clock } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
 import AddReportDialog from "@/components/dialogs/AddReportDialog";
 import { useProject } from "@/contexts/ProjectContext";
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 const Reports = () => {
   const { selectedProject } = useProject();
   const [reports, setReports] = useState<any[]>([]);
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const { toast } = useToast();
 
   const handleReportAdded = (newReport: any) => {
     setReports([...reports, newReport]);
+  };
+
+  const handleDownload = (report: any) => {
+    // Simulate file download
+    toast({
+      title: "Download Started",
+      description: `Downloading ${report.title}...`,
+    });
+    
+    // In a real app, this would trigger an actual file download
+    setTimeout(() => {
+      toast({
+        title: "Download Complete",
+        description: `${report.title} has been downloaded successfully.`,
+      });
+    }, 2000);
+  };
+
+  const handleGenerateNow = (report: any) => {
+    toast({
+      title: "Report Generation Started",
+      description: `Generating ${report.title}. This may take a few minutes.`,
+    });
+    
+    // In a real app, this would trigger report generation
+    setTimeout(() => {
+      toast({
+        title: "Report Generated",
+        description: `${report.title} has been generated and is ready for download.`,
+      });
+    }, 3000);
+  };
+
+  const handleViewPreview = (report: any) => {
+    toast({
+      title: "Opening Preview",
+      description: `Loading preview for ${report.title}...`,
+    });
+  };
+
+  const handleSettings = (report: any) => {
+    toast({
+      title: "Report Settings",
+      description: `Opening settings for ${report.title}...`,
+    });
+  };
+
+  const handleScheduleReport = () => {
+    toast({
+      title: "Schedule Report",
+      description: "Opening report scheduling interface...",
+    });
   };
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -77,7 +131,10 @@ const Reports = () => {
               <p className="text-muted-foreground">Generate and manage project reports</p>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline">Schedule Report</Button>
+              <Button variant="outline" onClick={handleScheduleReport}>
+                <Clock className="h-4 w-4 mr-1" />
+                Schedule Report
+              </Button>
               <Button className="gap-2" onClick={() => setShowAddDialog(true)}>
                 <Plus className="h-4 w-4" />
                 Create Report
@@ -176,14 +233,23 @@ const Reports = () => {
                     
                     <div className="flex gap-2">
                       {report.status === "Available" && (
-                        <Button variant="outline" size="sm" className="gap-2">
+                        <Button variant="outline" size="sm" className="gap-2" onClick={() => handleDownload(report)}>
                           <Download className="h-3 w-3" />
                           Download
                         </Button>
                       )}
-                      <Button variant="outline" size="sm">View Preview</Button>
-                      <Button variant="outline" size="sm">Generate Now</Button>
-                      <Button variant="outline" size="sm">Settings</Button>
+                      <Button variant="outline" size="sm" onClick={() => handleViewPreview(report)}>
+                        <Eye className="h-4 w-4 mr-1" />
+                        View Preview
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => handleGenerateNow(report)}>
+                        <FileText className="h-4 w-4 mr-1" />
+                        Generate Now
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => handleSettings(report)}>
+                        <Settings className="h-4 w-4 mr-1" />
+                        Settings
+                      </Button>
                     </div>
                   </div>
                   

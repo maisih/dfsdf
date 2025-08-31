@@ -1,9 +1,11 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Package, AlertCircle, CheckCircle } from "lucide-react";
+import { Plus, Package, AlertCircle, CheckCircle, History } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
+import EditMaterialDialog from "@/components/dialogs/EditMaterialDialog";
+import OrderMoreMaterialDialog from "@/components/dialogs/OrderMoreMaterialDialog";
 import { useProject } from "@/contexts/ProjectContext";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -136,9 +138,12 @@ const Materials = () => {
                       </div>
                       
                       <div className="flex gap-2">
-                        <Button variant="outline" size="sm">Edit</Button>
-                        <Button variant="outline" size="sm">Order More</Button>
-                        <Button variant="outline" size="sm">History</Button>
+                        <EditMaterialDialog material={material} onMaterialUpdated={loadMaterials} />
+                        <OrderMoreMaterialDialog material={material} onMaterialOrdered={loadMaterials} />
+                        <Button variant="outline" size="sm">
+                          <History className="h-4 w-4 mr-1" />
+                          History
+                        </Button>
                       </div>
                     </div>
                   </CardContent>
