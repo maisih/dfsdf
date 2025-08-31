@@ -7,6 +7,7 @@ import Sidebar from "@/components/layout/Sidebar";
 import AddTeamMemberDialog from "@/components/dialogs/AddTeamMemberDialog";
 import EditTeamMemberDialog from "@/components/dialogs/EditTeamMemberDialog";
 import ContactTeamMemberDialog from "@/components/dialogs/ContactTeamMemberDialog";
+import DeleteTeamMemberDialog from "@/components/dialogs/DeleteTeamMemberDialog";
 import { useProject } from "@/contexts/ProjectContext";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -131,9 +132,14 @@ const Team = () => {
                       </div>
                     </div>
                     
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
                       <EditTeamMemberDialog member={member} onMemberUpdated={loadTeamMembers} />
                       <ContactTeamMemberDialog member={member} />
+                      <DeleteTeamMemberDialog 
+                        memberId={member.id}
+                        memberName={member.name}
+                        onMemberDeleted={loadTeamMembers}
+                      />
                     </div>
                   </CardContent>
                 </Card>

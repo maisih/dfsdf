@@ -6,6 +6,7 @@ import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
 import EditMaterialDialog from "@/components/dialogs/EditMaterialDialog";
 import OrderMoreMaterialDialog from "@/components/dialogs/OrderMoreMaterialDialog";
+import DeleteMaterialDialog from "@/components/dialogs/DeleteMaterialDialog";
 import { useProject } from "@/contexts/ProjectContext";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -137,13 +138,18 @@ const Materials = () => {
                         )}
                       </div>
                       
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 flex-wrap">
                         <EditMaterialDialog material={material} onMaterialUpdated={loadMaterials} />
                         <OrderMoreMaterialDialog material={material} onMaterialOrdered={loadMaterials} />
                         <Button variant="outline" size="sm">
                           <History className="h-4 w-4 mr-1" />
                           History
                         </Button>
+                        <DeleteMaterialDialog 
+                          materialId={material.id}
+                          materialName={material.name}
+                          onMaterialDeleted={loadMaterials}
+                        />
                       </div>
                     </div>
                   </CardContent>

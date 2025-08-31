@@ -5,6 +5,7 @@ import { Plus, Wrench, MapPin, Calendar, AlertTriangle, History, FileText } from
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
 import EditEquipmentDialog from "@/components/dialogs/EditEquipmentDialog";
+import DeleteEquipmentDialog from "@/components/dialogs/DeleteEquipmentDialog";
 import { useProject } from "@/contexts/ProjectContext";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -185,7 +186,7 @@ const Equipment = () => {
                           </div>
                         </div>
                         
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 flex-wrap">
                           <EditEquipmentDialog equipment={item} onEquipmentUpdated={loadEquipment} />
                           <Button variant="outline" size="sm">
                             <FileText className="h-4 w-4 mr-1" />
@@ -195,6 +196,11 @@ const Equipment = () => {
                             <History className="h-4 w-4 mr-1" />
                             History
                           </Button>
+                          <DeleteEquipmentDialog 
+                            equipmentId={item.id}
+                            equipmentName={equipmentName}
+                            onEquipmentDeleted={loadEquipment}
+                          />
                         </div>
                       </div>
                     </CardContent>
