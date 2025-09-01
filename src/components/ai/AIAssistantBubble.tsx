@@ -28,10 +28,9 @@ const AIAssistantBubble = () => {
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('ai-project-assistant', {
+      const { data, error } = await supabase.functions.invoke('openrouter-assistant', {
         body: { 
-          message: userMessage,
-          context: "construction and civil engineering assistant"
+          message: userMessage
         }
       });
 

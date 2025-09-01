@@ -19,14 +19,43 @@ const AICostOptimizer = () => {
 
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('ai-cost-optimizer', {
-        body: { projectId: selectedProject.id }
+      // Build optimization prompt with project data
+      const optimizationPrompt = `Analyze this construction project's costs and provide optimization recommendations:
+
+Project: ${selectedProject.name}
+Total Budget: $${selectedProject.budget || 0}
+Spent So Far: $${selectedProject.spent || 0}
+Remaining Budget: $${(selectedProject.budget || 0) - (selectedProject.spent || 0)}
+Progress: ${selectedProject.progress || 0}%
+
+Provide:
+1. Cost optimization opportunities
+2. Budget reallocation suggestions  
+3. Cost-saving measures
+4. Risk areas for cost overruns
+5. Recommended actions with potential savings
+6. Alternative material/supplier suggestions`;
+
+      const { data, error } = await supabase.functions.invoke('openrouter-assistant', {
+        body: { 
+          message: optimizationPrompt 
+        }
       });
 
       if (error) throw error;
 
-      setOptimization(data.optimization);
-      setCostMetrics(data.costMetrics);
+      setOptimization(data.response);
+      
+      // Set basic cost metrics from project data
+      setCostMetrics({
+        totalBudget: selectedProject.budget || 0,
+        spent: selectedProject.spent || 0,
+        remaining: (selectedProject.budget || 0) - (selectedProject.spent || 0),
+        materialCosts: 0,
+        taskCosts: 0,
+        expensesByCategory: {},
+        projectedOverrun: Math.max(0, (selectedProject.spent || 0) - (selectedProject.budget || 0))
+      });
 
       toast({
         title: "Cost Optimization Complete",

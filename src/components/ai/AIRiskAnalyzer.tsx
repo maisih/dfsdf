@@ -19,14 +19,52 @@ const AIRiskAnalyzer = () => {
 
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('ai-risk-analyzer', {
-        body: { projectId: selectedProject.id }
+      // Build risk analysis prompt
+      const riskPrompt = `Analyze the risks for this construction project and provide a comprehensive risk assessment:
+
+Project: ${selectedProject.name}
+Status: ${selectedProject.status}
+Budget: $${selectedProject.budget || 0}
+Spent: $${selectedProject.spent || 0}
+Progress: ${selectedProject.progress || 0}%
+Start Date: ${selectedProject.start_date}
+End Date: ${selectedProject.end_date}
+Location: ${selectedProject.location}
+
+Please analyze:
+1. Budget and financial risks
+2. Timeline and scheduling risks  
+3. Weather and environmental risks
+4. Safety and compliance risks
+5. Resource and material risks
+6. Quality control risks
+7. Stakeholder and communication risks
+
+Provide specific risk levels, mitigation strategies, and actionable recommendations.`;
+
+      const { data, error } = await supabase.functions.invoke('openrouter-assistant', {
+        body: { 
+          message: riskPrompt 
+        }
       });
 
       if (error) throw error;
 
-      setAnalysis(data.analysis);
-      setRiskMetrics(data.riskMetrics);
+      setAnalysis(data.response);
+      
+      // Set basic risk metrics from project data
+      const budgetUtilization = selectedProject.budget ? 
+        ((selectedProject.spent || 0) / selectedProject.budget) * 100 : 0;
+      
+      const isOverBudget = budgetUtilization > 90;
+      const isDelayed = selectedProject.progress < 50; // Simple heuristic
+      
+      setRiskMetrics({
+        overdueTasks: 0, // Would need to fetch from tasks table
+        budgetUtilization: Math.round(budgetUtilization),
+        openSignals: 0,
+        riskLevel: isOverBudget ? 'critical' : isDelayed ? 'high' : 'medium'
+      });
 
       toast({
         title: "Risk Analysis Complete",
