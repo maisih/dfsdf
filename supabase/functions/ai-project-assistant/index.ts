@@ -15,43 +15,51 @@ serve(async (req) => {
   try {
     const { message, projectId } = await req.json();
     
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
-    );
+    let contextPrompt = `You are an AI construction and civil engineering assistant. You help with general construction questions, project management, safety guidelines, material calculations, and engineering best practices.`;
+    let project = null;
 
-    // Get project context
-    const { data: project } = await supabaseClient
-      .from('projects')
-      .select(`
-        *,
-        tasks(*),
-        materials(*),
-        expenses(*),
-        team_members(*),
-        daily_logs(*)
-      `)
-      .eq('id', projectId)
-      .single();
+    // If projectId is provided, get project context
+    if (projectId) {
+      const supabaseClient = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+      );
 
-    const contextPrompt = `You are an AI construction project assistant. Here's the current project data:
+      const { data: projectData } = await supabaseClient
+        .from('projects')
+        .select(`
+          *,
+          tasks(*),
+          materials(*),
+          expenses(*),
+          team_members(*),
+          daily_logs(*)
+        `)
+        .eq('id', projectId)
+        .single();
 
-Project: ${project?.name || 'Unknown'}
-Status: ${project?.status || 'Unknown'}
-Budget: $${project?.budget || 0}
-Spent: $${project?.spent || 0}
-Progress: ${project?.progress || 0}%
+      if (projectData) {
+        project = projectData;
+        contextPrompt = `You are an AI construction project assistant. Here's the current project data:
 
-Tasks: ${project?.tasks?.length || 0} total
-Materials: ${project?.materials?.length || 0} items
-Team Members: ${project?.team_members?.length || 0} people
-Expenses: ${project?.expenses?.length || 0} recorded
+Project: ${project.name}
+Status: ${project.status}
+Budget: $${project.budget || 0}
+Spent: $${project.spent || 0}
+Progress: ${project.progress || 0}%
 
-Recent Activity: ${project?.daily_logs?.slice(-3).map(log => 
+Tasks: ${project.tasks?.length || 0} total
+Materials: ${project.materials?.length || 0} items
+Team Members: ${project.team_members?.length || 0} people
+Expenses: ${project.expenses?.length || 0} recorded
+
+Recent Activity: ${project.daily_logs?.slice(-3).map(log => 
   `${log.log_date}: ${log.work_performed}`
 ).join('; ') || 'No recent activity'}
 
 Please provide helpful insights, recommendations, and answers based on this project data.`;
+      }
+    }
 
     const response = await fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',
@@ -79,12 +87,12 @@ Please provide helpful insights, recommendations, and answers based on this proj
 
     return new Response(JSON.stringify({ 
       response: aiResponse,
-      projectData: {
+      projectData: projectId ? {
         name: project?.name,
         progress: project?.progress,
         budget: project?.budget,
         spent: project?.spent
-      }
+      } : null
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
