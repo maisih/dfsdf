@@ -99,7 +99,7 @@ const AIInsights = () => {
           </div>
         )}
 
-        <div className="grid grid-cols-3 gap-2 pt-2">
+        <div className="grid grid-cols-2 gap-2 pt-2">
           <Button
             variant="outline"
             size="sm"
@@ -108,16 +108,6 @@ const AIInsights = () => {
           >
             <AlertTriangle className="h-4 w-4 text-orange-500" />
             <span className="text-xs">Risk Analysis</span>
-          </Button>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate('/ai')}
-            className="flex flex-col items-center gap-1 h-auto py-2"
-          >
-            <DollarSign className="h-4 w-4 text-green-500" />
-            <span className="text-xs">Cost Optimizer</span>
           </Button>
           
           <Button
