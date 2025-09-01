@@ -68,14 +68,16 @@ Provide detailed analysis including:
 
 Provide specific, actionable recommendations for construction site management.`;
 
-    const response = await fetch('https://api.deepseek.com/chat/completions', {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${Deno.env.get('DEEPSEEK_API_KEY')}`,
+        'Authorization': `Bearer ${Deno.env.get('OPENROUTER_API_KEY')}`,
         'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://lovable.dev',
+        'X-Title': 'Construction Management AI',
       },
       body: JSON.stringify({
-        model: 'deepseek-reasoner',
+        model: 'moonshot/moonshot-v1-128k',
         messages: [
           { role: 'system', content: 'You are an expert construction weather analyst and safety specialist. Provide detailed, actionable weather risk assessments for construction projects.' },
           { role: 'user', content: analysisPrompt }
@@ -86,7 +88,7 @@ Provide specific, actionable recommendations for construction site management.`;
     });
 
     if (!response.ok) {
-      throw new Error(`DeepSeek API error: ${response.status}`);
+      throw new Error(`OpenRouter API error: ${response.status}`);
     }
 
     const data = await response.json();
