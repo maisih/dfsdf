@@ -1,6 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, Brain } from "lucide-react";
-import AICostOptimizer from "@/components/ai/AICostOptimizer";
 import { useProject } from "@/contexts/ProjectContext";
 
 const AI = () => {
