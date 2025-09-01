@@ -1,7 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { DollarSign, TrendingUp, TrendingDown, AlertTriangle } from "lucide-react";
+import { DollarSign, TrendingUp, TrendingDown, AlertTriangle, Brain } from "lucide-react";
+import AICostOptimizer from "@/components/ai/AICostOptimizer";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
 import ExpenseForm from "@/components/forms/ExpenseForm";
@@ -209,6 +210,19 @@ const Budget = () => {
                   </CardContent>
                 </Card>
               )}
+
+              {/* AI Cost Optimizer */}
+              <Card className="shadow-soft mb-6">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Brain className="h-5 w-5 text-primary" />
+                    AI Cost Optimizer
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <AICostOptimizer />
+                </CardContent>
+              </Card>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Expense Form */}

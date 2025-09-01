@@ -30,39 +30,17 @@ const AI = () => {
         </Card>
       )}
 
-      {selectedProject && (
+      {selectedProject ? (
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5" />
-              Cost Optimizer
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <AICostOptimizer />
+          <CardContent className="p-8 text-center">
+            <Brain className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+            <h3 className="text-xl font-semibold mb-2">AI Features Moved</h3>
+            <p className="text-muted-foreground">
+              The AI Cost Optimizer has been moved to the Budget page for better integration with your financial data.
+            </p>
           </CardContent>
         </Card>
-      )}
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Brain className="h-5 w-5" />
-            AI Features Overview
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <h4 className="font-semibold flex items-center gap-2">
-              <DollarSign className="h-4 w-4 text-green-500" />
-              Cost Optimization
-            </h4>
-            <p className="text-sm text-muted-foreground">
-              Get AI-powered suggestions to optimize costs, reduce waste, and maximize your project budget efficiency for your construction projects.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      ) : null}
     </div>
   );
 };
