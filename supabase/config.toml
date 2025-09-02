@@ -7,6 +7,9 @@ schemas = ["public", "graphql_public"]
 extra_search_path = ["public", "extensions"]
 max_rows = 1000
 
+[functions.validate-invitation]
+verify_jwt = false
+
 [functions.ai-project-assistant]
 verify_jwt = false
 

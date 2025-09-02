@@ -10,15 +10,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import ProjectSelector from "@/components/project/ProjectSelector";
-import { useAuth } from "@/contexts/AuthContext";
+import { useInvitationAuth } from "@/contexts/InvitationAuthContext";
 import { useToast } from "@/hooks/use-toast";
 
 const Header = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut } = useInvitationAuth();
   const { toast } = useToast();
 
   const handleSignOut = async () => {
-    await signOut();
+    signOut();
     toast({
       title: "Signed out",
       description: "You have been signed out successfully.",
@@ -46,7 +46,7 @@ const Header = () => {
               <Avatar className="h-10 w-10">
                 <AvatarImage src="/avatars/01.png" alt="@user" />
                 <AvatarFallback>
-                  {user?.email?.[0]?.toUpperCase() || 'U'}
+                  {user?.role?.[0]?.toUpperCase() || 'U'}
                 </AvatarFallback>
               </Avatar>
             </Button>
@@ -55,10 +55,10 @@ const Header = () => {
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
                 <p className="text-sm font-medium leading-none">
-                  {user?.email?.split('@')[0] || 'User'}
+                  {user?.role?.charAt(0).toUpperCase() + user?.role?.slice(1) || 'User'}
                 </p>
                 <p className="text-xs leading-none text-muted-foreground">
-                  {user?.email}
+                  {user?.role} access via invitation
                 </p>
               </div>
             </DropdownMenuLabel>
