@@ -120,17 +120,27 @@ export function InvitationAuthProvider({ children }: { children: React.ReactNode
     // Set up session validation interval (every 5 minutes)
     const intervalId = setInterval(() => {
       const currentSession = getStoredSession();
-      if (!currentSession && user) {
-        // Session expired
-        setUser(null);
-      } else if (currentSession && !user) {
-        // Session restored
-        setUser(currentSession);
-      }
+      setUser((prev) => {
+        if (!currentSession) {
+          return null;
+        }
+        if (!prev) {
+          return currentSession;
+        }
+        if (
+          prev.sessionId !== currentSession.sessionId ||
+          prev.expiresAt !== currentSession.expiresAt ||
+          prev.role !== currentSession.role ||
+          prev.fingerprint !== currentSession.fingerprint
+        ) {
+          return currentSession;
+        }
+        return prev;
+      });
     }, 5 * 60 * 1000);
 
     return () => clearInterval(intervalId);
-  }, [user]);
+  }, []);
 
   const validateInvitation = async (code: string): Promise<{ success: boolean; error?: string }> => {
     try {
