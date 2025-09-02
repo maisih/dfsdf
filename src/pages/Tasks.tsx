@@ -125,7 +125,7 @@ const Tasks = () => {
               <h1 className="text-3xl font-bold text-foreground">Tasks & Costs</h1>
               <p className="text-muted-foreground">Track construction tasks and their associated costs</p>
             </div>
-            <AddTaskDialog />
+            <AddTaskDialog onTaskCreated={loadTasks} />
           </div>
 
           {!selectedProject ? (
