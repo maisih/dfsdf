@@ -121,7 +121,7 @@ const Index = () => {
           <Sidebar />
         </div>
 
-        <main className="flex-1 md:ml-64 ml-0 p-4 md:p-6 space-y-6">
+        <main className="flex-1 md:ml-64 ml-0 p-4 md:p-6 pb-24 space-y-6">
           {!selectedProject ? (
             <div className="text-center py-20">
               <Building2 className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
