@@ -1,4 +1,4 @@
-import { Building2, Bell, Settings, User, LogOut } from "lucide-react";
+import { Building2, Bell, Settings, User, LogOut, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -9,10 +9,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Link } from "react-router-dom";
 import ProjectSelector from "@/components/project/ProjectSelector";
+import { navigation } from "@/components/layout/Sidebar";
 import { useInvitationAuth } from "@/contexts/InvitationAuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { memo } from "react";
+import { memo, useState } from "react";
 
 const Header = () => {
   const { user, signOut } = useInvitationAuth();
