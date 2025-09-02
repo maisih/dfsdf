@@ -7,7 +7,7 @@ import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
 import ExpenseForm from "@/components/forms/ExpenseForm";
 import { useProject } from "@/contexts/ProjectContext";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 const budgetData = [
