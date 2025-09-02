@@ -143,8 +143,132 @@ const Projects = () => {
             />
           </div>
 
-          {/* Projects Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+          {/* Mobile horizontal pager */}
+          <div className="md:hidden -mx-4 px-4 overflow-x-auto snap-x snap-mandatory flex gap-4 pb-2">
+            {filteredProjects.map((project) => (
+              <div key={project.id} className="w-[calc(100vw-2rem)] shrink-0 snap-start">
+                <Card className="group hover:shadow-medium transition-all duration-300 border-0 shadow-soft">
+                  {/* Project Image */}
+                  <div className="relative overflow-hidden rounded-t-lg bg-muted aspect-[4/3]">
+                    <img
+                      src={constructionHero}
+                      alt={project.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <div className="absolute top-3 left-3 flex gap-2">
+                      {project.status === 'active' && (
+                        <Badge variant="new">New!</Badge>
+                      )}
+                      <Badge variant={getStatusColor(project.status)}>
+                        {project.status}
+                      </Badge>
+                    </div>
+                    <div className="absolute top-3 right-3">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="secondary" size="sm" className="h-8 w-8 p-0 bg-white/90 hover:bg-white">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleViewDetails(project.id)}>
+                            <Eye className="h-4 w-4 mr-2" />
+                            View Details
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => { setSelectedProject(project); setEditOpen(true); }}>
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit Project
+                          </DropdownMenuItem>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete Project
+                              </DropdownMenuItem>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Project</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete "{project.name}"? This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDeleteProject(project.id)}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </div>
+
+                  <CardContent className="p-4">
+                    {/* Project Info */}
+                    <div className="space-y-2">
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-1">
+                          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+                            {project.created_by || 'No Manager'}
+                          </p>
+                          <h3 className="font-semibold text-foreground line-clamp-1 group-hover:text-primary transition-colors">
+                            {project.name}
+                          </h3>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center text-xs text-muted-foreground">
+                        <MapPin className="h-3 w-3 mr-1" />
+                        {project.location || 'Location not specified'}
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                          <p className="text-sm font-bold text-foreground">
+                            {project.budget?.toLocaleString() || '0'} MAD
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <Rating rating={getProjectRating(project.progress || 0)} size="sm" />
+                            <span className="text-xs text-muted-foreground">
+                              ({project.progress || 0}%)
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Progress indicator */}
+                        <div className="text-right">
+                          <div className="text-xs text-muted-foreground mb-1">Progress</div>
+                          <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-primary transition-all duration-300"
+                              style={{ width: `${project.progress || 0}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Color variants (representing different phases/aspects) */}
+                      <div className="flex items-center gap-1 pt-2">
+                        <div className="w-3 h-3 rounded-full bg-primary border border-white shadow-sm" title="Planning"></div>
+                        <div className="w-3 h-3 rounded-full bg-success border border-white shadow-sm" title="Construction"></div>
+                        <div className="w-3 h-3 rounded-full bg-warning border border-white shadow-sm" title="Finishing"></div>
+                        <div className="w-3 h-3 rounded-full bg-muted border border-white shadow-sm" title="Inspection"></div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop grid */}
+          <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredProjects.map((project) => (
               <Card key={project.id} className="group hover:shadow-medium transition-all duration-300 border-0 shadow-soft">
                 {/* Project Image */}
@@ -239,12 +363,12 @@ const Projects = () => {
                           </span>
                         </div>
                       </div>
-                      
+
                       {/* Progress indicator */}
                       <div className="text-right">
                         <div className="text-xs text-muted-foreground mb-1">Progress</div>
                         <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
-                          <div 
+                          <div
                             className="h-full bg-primary transition-all duration-300"
                             style={{ width: `${project.progress || 0}%` }}
                           />
