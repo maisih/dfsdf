@@ -57,7 +57,7 @@ const Header = () => {
         </Sheet>
         <div className="flex items-center gap-2">
           <Building2 className="h-8 w-8 text-primary" />
-          <h1 className="text-xl font-bold text-foreground">SiteFlow Master</h1>
+          <h1 className="text-xl font-bold text-foreground">InfraCloud</h1>
         </div>
         <div className="hidden sm:block">
           <ProjectSelector />
