@@ -23,11 +23,12 @@ import { useProject } from "@/contexts/ProjectContext";
 
 interface EditProjectDialogProps {
   project: any;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-const EditProjectDialog = ({ project }: EditProjectDialogProps) => {
+const EditProjectDialog = ({ project, open, onOpenChange }: EditProjectDialogProps) => {
   const { loadProjects } = useProject();
-  const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   
   const [formData, setFormData] = useState({
@@ -40,6 +41,20 @@ const EditProjectDialog = ({ project }: EditProjectDialogProps) => {
     start_date: project.start_date ? new Date(project.start_date) : undefined,
     end_date: project.end_date ? new Date(project.end_date) : undefined,
   });
+
+  // Sync when project changes
+  React.useEffect(() => {
+    setFormData({
+      name: project.name || '',
+      description: project.description || '',
+      location: project.location || '',
+      budget: project.budget || '',
+      status: project.status || 'planning',
+      progress: project.progress || 0,
+      start_date: project.start_date ? new Date(project.start_date) : undefined,
+      end_date: project.end_date ? new Date(project.end_date) : undefined,
+    });
+  }, [project]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,7 +78,7 @@ const EditProjectDialog = ({ project }: EditProjectDialogProps) => {
       if (error) throw error;
 
       toast.success('Project updated successfully!');
-      setIsOpen(false);
+      onOpenChange(false);
       loadProjects();
     } catch (error) {
       console.error('Error updating project:', error);
@@ -74,13 +89,7 @@ const EditProjectDialog = ({ project }: EditProjectDialogProps) => {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          <Edit className="h-4 w-4 mr-1" />
-          Edit
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Edit Project</DialogTitle>
@@ -218,7 +227,7 @@ const EditProjectDialog = ({ project }: EditProjectDialogProps) => {
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button type="submit" disabled={isLoading}>
