@@ -181,8 +181,8 @@ const Budget = () => {
               <p className="text-muted-foreground">Monitor project costs and financial performance</p>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline">Export Report</Button>
-              <Button>Add Expense</Button>
+              <Button variant="outline" onClick={exportReport}>Export Report</Button>
+              <Button onClick={scrollToExpenseForm}>Add Expense</Button>
             </div>
           </div>
 
