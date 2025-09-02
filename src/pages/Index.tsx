@@ -22,6 +22,7 @@ const Index = () => {
     totalExpenses: 0
   });
   const [activeTasks, setActiveTasks] = useState<any[]>([]);
+  const [taskSummary, setTaskSummary] = useState({ total: 0, completed: 0 });
 
   useEffect(() => {
     if (selectedProject) {
@@ -62,12 +63,14 @@ const Index = () => {
 
     try {
       // Load team members count
-      const [teamRes, tasksRes, expensesRes, materialsRes, taskCostsRes] = await Promise.all([
+      const [teamRes, tasksRes, expensesRes, materialsRes, taskCostsRes, allTasksRes, completedTasksRes] = await Promise.all([
         supabase.from('team_members').select('id').eq('project_id', selectedProject.id),
         supabase.from('tasks').select('id').eq('project_id', selectedProject.id).neq('status', 'completed'),
         supabase.from('expenses').select('amount').eq('project_id', selectedProject.id),
         supabase.from('materials').select('quantity, unit_cost').eq('project_id', selectedProject.id),
-        supabase.from('tasks').select('cost').eq('project_id', selectedProject.id).not('cost', 'is', null)
+        supabase.from('tasks').select('cost').eq('project_id', selectedProject.id).not('cost', 'is', null),
+        supabase.from('tasks').select('id').eq('project_id', selectedProject.id),
+        supabase.from('tasks').select('id').eq('project_id', selectedProject.id).eq('status', 'completed')
       ]);
 
       const teamData = teamRes.data;
@@ -75,6 +78,8 @@ const Index = () => {
       const expensesData = expensesRes.data;
       const materialsData = materialsRes.data;
       const taskCostsData = taskCostsRes.data;
+      const allTasksData = allTasksRes.data;
+      const completedTasksData = completedTasksRes.data;
 
       const totalExpenses = expensesData?.reduce((sum, expense) => sum + (expense.amount || 0), 0) || 0;
       const totalMaterialsCost = materialsData?.reduce((sum, material) => {
@@ -92,6 +97,10 @@ const Index = () => {
         budgetUtilization,
         totalExpenses: totalSpent
       });
+
+      const totalTasks = allTasksData?.length || 0;
+      const completedTasks = completedTasksData?.length || 0;
+      setTaskSummary({ total: totalTasks, completed: completedTasks });
     } catch (error) {
       console.error('Error loading project stats:', error);
     }
@@ -166,11 +175,38 @@ const Index = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <Card className="shadow-soft">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">Project Progress</CardTitle>
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Task Timeline</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-foreground mb-2">{selectedProject.progress || 0}%</div>
-                    <Progress value={selectedProject.progress || 0} className="h-2" />
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="text-2xl font-bold text-foreground">
+                        {taskSummary.completed}/{taskSummary.total}
+                      </div>
+                      <div className="text-xs text-muted-foreground">completed</div>
+                    </div>
+                    <div className="relative h-3 w-full rounded-full bg-muted overflow-hidden">
+                      <div
+                        className="absolute left-0 top-0 h-full bg-success transition-all duration-500"
+                        style={{ width: `${taskSummary.total ? Math.min(100, Math.round((taskSummary.completed / taskSummary.total) * 100)) : 0}%` }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent pointer-events-none" />
+                      {/* Tick marks */}
+                      {Array.from({ length: Math.min(taskSummary.total || 0, 8) }).map((_, i) => (
+                        <div
+                          key={i}
+                          className="absolute top-0 bottom-0 w-px bg-white/30"
+                          style={{ left: `${((i + 1) / Math.min(taskSummary.total || 1, 8)) * 100}%` }}
+                        />
+                      ))}
+                    </div>
+                    {activeTasks.length > 0 && (
+                      <div className="mt-3 text-xs text-muted-foreground">
+                        Next up: <span className="text-foreground font-medium">{activeTasks[0].title}</span>
+                        {activeTasks[0].due_date && (
+                          <span> · due {new Date(activeTasks[0].due_date).toLocaleDateString()}</span>
+                        )}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 
