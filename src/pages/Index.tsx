@@ -62,36 +62,19 @@ const Index = () => {
 
     try {
       // Load team members count
-      const { data: teamData } = await supabase
-        .from('team_members')
-        .select('id')
-        .eq('project_id', selectedProject.id);
+      const [teamRes, tasksRes, expensesRes, materialsRes, taskCostsRes] = await Promise.all([
+        supabase.from('team_members').select('id').eq('project_id', selectedProject.id),
+        supabase.from('tasks').select('id').eq('project_id', selectedProject.id).neq('status', 'completed'),
+        supabase.from('expenses').select('amount').eq('project_id', selectedProject.id),
+        supabase.from('materials').select('quantity, unit_cost').eq('project_id', selectedProject.id),
+        supabase.from('tasks').select('cost').eq('project_id', selectedProject.id).not('cost', 'is', null)
+      ]);
 
-      // Load open tasks count
-      const { data: tasksData } = await supabase
-        .from('tasks')
-        .select('id')
-        .eq('project_id', selectedProject.id)
-        .neq('status', 'completed');
-
-      // Load expenses for budget calculation
-      const { data: expensesData } = await supabase
-        .from('expenses')
-        .select('amount')
-        .eq('project_id', selectedProject.id);
-
-      // Load materials cost for budget calculation
-      const { data: materialsData } = await supabase
-        .from('materials')
-        .select('quantity, unit_cost')
-        .eq('project_id', selectedProject.id);
-
-      // Load task costs (includes equipment cost captured via equipment form)
-      const { data: taskCostsData } = await supabase
-        .from('tasks')
-        .select('cost')
-        .eq('project_id', selectedProject.id)
-        .not('cost', 'is', null);
+      const teamData = teamRes.data;
+      const tasksData = tasksRes.data;
+      const expensesData = expensesRes.data;
+      const materialsData = materialsRes.data;
+      const taskCostsData = taskCostsRes.data;
 
       const totalExpenses = expensesData?.reduce((sum, expense) => sum + (expense.amount || 0), 0) || 0;
       const totalMaterialsCost = materialsData?.reduce((sum, material) => {
