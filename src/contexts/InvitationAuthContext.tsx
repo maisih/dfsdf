@@ -149,6 +149,9 @@ export function InvitationAuthProvider({ children }: { children: React.ReactNode
       const fingerprint = generateFingerprint();
       
       const projectUrl = import.meta.env.VITE_SUPABASE_URL?.replace(/\/$/, '');
+      if (!projectUrl || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+        return { success: false, error: 'Missing Supabase configuration. Please set environment variables.' };
+      }
       const response = await fetch(`${projectUrl}/functions/v1/validate-invitation`, {
         method: 'POST',
         headers: {
