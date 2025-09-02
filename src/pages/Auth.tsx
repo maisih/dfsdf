@@ -1,80 +1,47 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { useInvitationAuth } from '@/contexts/InvitationAuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, Building2 } from 'lucide-react';
+import { AlertCircle, Building2, Shield, Key } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function Auth() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { signIn, signUp } = useAuth();
+  const [invitationCode, setInvitationCode] = useState('');
+  const { validateInvitation } = useInvitationAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleInvitationSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
 
-    const formData = new FormData(e.currentTarget);
-    const email = formData.get('email') as string;
-    const password = formData.get('password') as string;
-
-    const { error } = await signIn(email, password);
-    
-    if (error) {
-      setError(error.message);
-      toast({
-        variant: "destructive",
-        title: "Sign in failed",
-        description: error.message,
-      });
-    } else {
-      toast({
-        title: "Welcome back!",
-        description: "You have been signed in successfully.",
-      });
-      navigate('/');
-    }
-    
-    setIsLoading(false);
-  };
-
-  const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError(null);
-
-    const formData = new FormData(e.currentTarget);
-    const email = formData.get('email') as string;
-    const password = formData.get('password') as string;
-    const fullName = formData.get('fullName') as string;
-
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters long');
+    if (!invitationCode.trim()) {
+      setError('Please enter an invitation code');
       setIsLoading(false);
       return;
     }
 
-    const { error } = await signUp(email, password, fullName);
+    const { success, error: validationError } = await validateInvitation(invitationCode.trim());
     
-    if (error) {
-      setError(error.message);
+    if (success) {
+      toast({
+        title: "Access granted!",
+        description: "Welcome to Construction Manager.",
+      });
+      navigate('/');
+    } else {
+      setError(validationError || 'Invalid invitation code');
       toast({
         variant: "destructive",
-        title: "Sign up failed",
-        description: error.message,
-      });
-    } else {
-      toast({
-        title: "Account created!",
-        description: "Please check your email to verify your account.",
+        title: "Access denied",
+        description: validationError || 'Invalid invitation code',
       });
     }
     
@@ -86,105 +53,73 @@ export default function Auth() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
-            <Building2 className="h-12 w-12 text-primary" />
+            <div className="relative">
+              <Building2 className="h-12 w-12 text-primary" />
+              <Shield className="h-6 w-6 text-accent absolute -top-1 -right-1 bg-background rounded-full p-1" />
+            </div>
           </div>
           <h1 className="text-3xl font-bold text-foreground">Construction Manager</h1>
-          <p className="text-muted-foreground mt-2">Manage your construction projects efficiently</p>
+          <p className="text-muted-foreground mt-2">Secure access with invitation code</p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Welcome</CardTitle>
+            <div className="flex items-center gap-2 mb-2">
+              <Key className="h-5 w-5 text-primary" />
+              <CardTitle>Secure Access</CardTitle>
+            </div>
             <CardDescription>
-              Sign in to your account or create a new one to get started.
+              Enter your invitation code to access the construction management system.
+              This ensures secure and authorized access to project data.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="signin" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="signin">Sign In</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
-              </TabsList>
+            {error && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
 
-              {error && (
-                <Alert variant="destructive" className="mt-4">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
+            <form onSubmit={handleInvitationSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="invitation-code">Invitation Code</Label>
+                <Input
+                  id="invitation-code"
+                  name="invitationCode"
+                  type="text"
+                  placeholder="Enter your invitation code (e.g., ENG2024)"
+                  value={invitationCode}
+                  onChange={(e) => setInvitationCode(e.target.value.toUpperCase())}
+                  required
+                  disabled={isLoading}
+                  className="text-center text-lg font-mono"
+                  maxLength={20}
+                />
+              </div>
+              
+              <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
+                <div className="flex items-center gap-2 mb-2">
+                  <Shield className="h-4 w-4" />
+                  <strong>Security Features:</strong>
+                </div>
+                <ul className="space-y-1 text-xs">
+                  <li>• Encrypted session validation</li>
+                  <li>• Rate limiting protection</li>
+                  <li>• Browser fingerprint verification</li>
+                  <li>• Automatic session expiry</li>
+                </ul>
+              </div>
 
-              <TabsContent value="signin">
-                <form onSubmit={handleSignIn} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signin-email">Email</Label>
-                    <Input
-                      id="signin-email"
-                      name="email"
-                      type="email"
-                      placeholder="Enter your email"
-                      required
-                      disabled={isLoading}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signin-password">Password</Label>
-                    <Input
-                      id="signin-password"
-                      name="password"
-                      type="password"
-                      placeholder="Enter your password"
-                      required
-                      disabled={isLoading}
-                    />
-                  </div>
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? 'Signing in...' : 'Sign In'}
-                  </Button>
-                </form>
-              </TabsContent>
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? 'Validating...' : 'Access System'}
+              </Button>
+            </form>
 
-              <TabsContent value="signup">
-                <form onSubmit={handleSignUp} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-name">Full Name</Label>
-                    <Input
-                      id="signup-name"
-                      name="fullName"
-                      type="text"
-                      placeholder="Enter your full name"
-                      required
-                      disabled={isLoading}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
-                    <Input
-                      id="signup-email"
-                      name="email"
-                      type="email"
-                      placeholder="Enter your email"
-                      required
-                      disabled={isLoading}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password">Password</Label>
-                    <Input
-                      id="signup-password"
-                      name="password"
-                      type="password"
-                      placeholder="Create a password (min. 6 characters)"
-                      required
-                      disabled={isLoading}
-                      minLength={6}
-                    />
-                  </div>
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? 'Creating account...' : 'Create Account'}
-                  </Button>
-                </form>
-              </TabsContent>
-            </Tabs>
+            <div className="mt-6 text-center text-sm text-muted-foreground">
+              <p>Need an invitation code?</p>
+              <p>Contact your project administrator.</p>
+            </div>
           </CardContent>
         </Card>
       </div>
