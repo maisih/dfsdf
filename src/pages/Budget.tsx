@@ -65,11 +65,11 @@ const Budget = () => {
 
   const loadExpenses = async () => {
     if (!selectedProject) return;
-    
+
     setLoading(true);
     try {
-      // Load both expenses and task costs
-      const [expensesResult, tasksResult] = await Promise.all([
+      // Load expenses, task costs, and material costs
+      const [expensesResult, tasksResult, materialsResult] = await Promise.all([
         supabase
           .from('expenses')
           .select('*')
@@ -79,27 +79,43 @@ const Budget = () => {
           .from('tasks')
           .select('id, title, cost, due_date, status')
           .eq('project_id', selectedProject.id)
-          .not('cost', 'is', null)
+          .not('cost', 'is', null),
+        supabase
+          .from('materials')
+          .select('id, name, quantity, unit_cost, delivered_at, supplier')
+          .eq('project_id', selectedProject.id)
       ]);
-      
+
       if (expensesResult.error) throw expensesResult.error;
       if (tasksResult.error) throw tasksResult.error;
-      
-      setExpenses(expensesResult.data || []);
-      
-      // Add task costs to expenses for display
+      if (materialsResult.error) throw materialsResult.error;
+
+      const baseExpenses = expensesResult.data || [];
+
+      // Task costs as expenses
       const taskExpenses = (tasksResult.data || []).map(task => ({
         id: `task-${task.id}`,
         category: 'Task Cost',
         description: task.title,
-        amount: task.cost,
+        amount: Number(task.cost) || 0,
         expense_date: task.due_date || new Date().toISOString().split('T')[0],
         isTask: true
       }));
-      
-      setExpenses([...expensesResult.data || [], ...taskExpenses]);
+
+      // Material costs as expenses (quantity * unit_cost)
+      const materialExpenses = (materialsResult.data || []).map((m) => ({
+        id: `material-${m.id}`,
+        category: 'Materials',
+        description: `${m.name}${m.unit_cost ? ` @ ${m.unit_cost} per unit` : ''}`,
+        amount: m.unit_cost ? Number(m.unit_cost) * Number(m.quantity || 0) : 0,
+        expense_date: m.delivered_at || new Date().toISOString().split('T')[0],
+        isMaterial: true
+      }));
+
+      setExpenses([...baseExpenses, ...taskExpenses, ...materialExpenses]);
     } catch (error) {
       console.error('Error loading expenses:', error);
+      setExpenses([]);
     } finally {
       setLoading(false);
     }
