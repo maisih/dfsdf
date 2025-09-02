@@ -39,27 +39,9 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [projects, setProjects] = useState<Project[]>([]);
 
   const clearProjectData = async () => {
-    try {
-      // Clear project-specific data from tables (except materials and equipment)
-      // Tasks
-      await supabase.from('tasks').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-      
-      // Expenses
-      await supabase.from('expenses').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-      
-      // Photos
-      await supabase.from('photos').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-      
-      // Documents
-      await supabase.from('documents').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-      
-      // Signals
-      await supabase.from('signals').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-      
-      console.log('✅ Project data cleared, materials and equipment preserved');
-    } catch (error) {
-      console.error('❌ Error clearing project data:', error);
-    }
+    // No-op: previously deleted data across all projects, which is unsafe.
+    // Intentionally left empty to prevent unintended data loss.
+    return;
   };
 
   const handleProjectSelection = async (project: Project | null) => {
