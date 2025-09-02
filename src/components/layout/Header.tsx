@@ -1,4 +1,4 @@
-import { Building2, Bell, Settings, User } from "lucide-react";
+import { Building2, Bell, Settings, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -10,8 +10,20 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import ProjectSelector from "@/components/project/ProjectSelector";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 const Header = () => {
+  const { user, signOut } = useAuth();
+  const { toast } = useToast();
+
+  const handleSignOut = async () => {
+    await signOut();
+    toast({
+      title: "Signed out",
+      description: "You have been signed out successfully.",
+    });
+  };
   return (
     <header className="h-16 bg-gradient-surface border-b border-border px-6 flex items-center justify-between shadow-soft">
       <div className="flex items-center gap-6">
@@ -33,16 +45,20 @@ const Header = () => {
             <Button variant="ghost" className="relative h-10 w-10 rounded-full">
               <Avatar className="h-10 w-10">
                 <AvatarImage src="/avatars/01.png" alt="@user" />
-                <AvatarFallback>JD</AvatarFallback>
+                <AvatarFallback>
+                  {user?.email?.[0]?.toUpperCase() || 'U'}
+                </AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-56" align="end" forceMount>
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">John Doe</p>
+                <p className="text-sm font-medium leading-none">
+                  {user?.email?.split('@')[0] || 'User'}
+                </p>
                 <p className="text-xs leading-none text-muted-foreground">
-                  Project Manager
+                  {user?.email}
                 </p>
               </div>
             </DropdownMenuLabel>
@@ -56,7 +72,8 @@ const Header = () => {
               Settings
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleSignOut}>
+              <LogOut className="mr-2 h-4 w-4" />
               Log out
             </DropdownMenuItem>
           </DropdownMenuContent>
