@@ -24,7 +24,7 @@ const MobileTabBar = () => {
               key={t.href}
               to={t.href}
               className={cn(
-                "flex flex-col items-center justify-center py-2 gap-1 text-xs",
+                "flex flex-col items-center justify-center py-3 gap-1 text-xs",
                 isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
               )}
             >
