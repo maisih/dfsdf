@@ -15,7 +15,8 @@ import ProjectSelector from "@/components/project/ProjectSelector";
 import { navigation } from "@/components/layout/Sidebar";
 import { useInvitationAuth } from "@/contexts/InvitationAuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { memo, useState } from "react";
+import { memo } from "react";
+import MobileTabBar from "@/components/layout/MobileTabBar";
 
 const Header = () => {
   const { user, signOut } = useInvitationAuth();
@@ -29,6 +30,7 @@ const Header = () => {
     });
   };
   return (
+    <>
     <header className="h-16 bg-gradient-surface border-b border-border px-4 md:px-6 flex items-center justify-between shadow-soft">
       <div className="flex items-center gap-3 md:gap-6">
         <Sheet>
@@ -108,6 +110,8 @@ const Header = () => {
         </DropdownMenu>
       </div>
     </header>
+    <MobileTabBar />
+    </>
   );
 };
 
