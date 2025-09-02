@@ -173,7 +173,7 @@ const Projects = () => {
                           <Eye className="h-4 w-4 mr-2" />
                           View Details
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setSelectedProject(project)}>
+                        <DropdownMenuItem onClick={() => { setSelectedProject(project); setEditOpen(true); }}>
                           <Edit className="h-4 w-4 mr-2" />
                           Edit Project
                         </DropdownMenuItem>
