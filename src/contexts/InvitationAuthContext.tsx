@@ -148,11 +148,12 @@ export function InvitationAuthProvider({ children }: { children: React.ReactNode
 
       const fingerprint = generateFingerprint();
       
-      const response = await fetch(`https://vtilhnvplxngstuetsak.supabase.co/functions/v1/validate-invitation`, {
+      const projectUrl = import.meta.env.VITE_SUPABASE_URL?.replace(/\/$/, '');
+      const response = await fetch(`${projectUrl}/functions/v1/validate-invitation`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ0aWxobnZwbHhuZ3N0dWV0c2FrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYzMjM4MjMsImV4cCI6MjA3MTg5OTgyM30.iLObpLXeYY1WZd24q1KowRLtGtZb_fxn7DF5C2WoiZc'}`
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
         },
         body: JSON.stringify({ code, fingerprint })
       });

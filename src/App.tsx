@@ -6,7 +6,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import { ProjectProvider } from "@/contexts/ProjectContext";
 import { InvitationAuthProvider } from "@/contexts/InvitationAuthContext";
-import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
+import { ProtectedRoute, RoleProtectedRoute } from "@/components/layout/ProtectedRoute";
 import AIAssistantBubble from "@/components/ai/AIAssistantBubble";
 const Index = lazy(() => import("./pages/Index"));
 const Projects = lazy(() => import("./pages/Projects"));
@@ -43,7 +43,7 @@ const AnimatedRoutes = () => {
           <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
           <Route path="/documents" element={<ProtectedRoute><Documents /></ProtectedRoute>} />
           <Route path="/ai" element={<ProtectedRoute><AI /></ProtectedRoute>} />
-          <Route path="/admin" element={<ProtectedRoute><InvitationManagement /></ProtectedRoute>} />
+          <Route path="/admin" element={<RoleProtectedRoute allowedRoles={["admin"]}><InvitationManagement /></RoleProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <ProtectedRoute>
