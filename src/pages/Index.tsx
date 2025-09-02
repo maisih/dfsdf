@@ -133,10 +133,12 @@ const Index = () => {
               {/* Project Header */}
               <div className="relative overflow-hidden rounded-xl bg-gradient-primary shadow-medium">
                 <div className="absolute inset-0 bg-black/20"></div>
-                <img 
-                  src={constructionHero} 
-                  alt="Construction site overview" 
+                <img
+                  src={constructionHero}
+                  alt="Construction site overview"
                   className="absolute inset-0 w-full h-full object-cover mix-blend-overlay"
+                  decoding="async"
+                  fetchpriority="high"
                 />
                 <div className="relative p-8 text-white">
                   <h1 className="text-3xl font-bold mb-2">{selectedProject.name}</h1>
