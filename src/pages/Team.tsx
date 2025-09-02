@@ -64,7 +64,7 @@ const Team = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <div className="flex">
-        <div className="hidden md:block fixed left-0 top-16 h:[calc(100vh-4rem)] bg-gradient-surface border-r border-border shadow-soft overflow-y-auto">
+        <div className="hidden md:block fixed left-0 top-16 h-[calc(100vh-4rem)] bg-gradient-surface border-r border-border shadow-soft overflow-y-auto">
           <Sidebar />
         </div>
         <main className="flex-1 md:ml-64 ml-0 p-4 md:p-6 pb-24">
