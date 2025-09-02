@@ -161,6 +161,10 @@ const Reports = () => {
                 <Clock className="h-4 w-4 mr-1" />
                 Schedule Report
               </Button>
+              <Button variant="outline" className="gap-2" onClick={exportAICostOptimization} disabled={!aiOptimization}>
+                <Download className="h-4 w-4" />
+                Export AI Cost Optimization
+              </Button>
               <Button className="gap-2" onClick={() => setShowAddDialog(true)}>
                 <Plus className="h-4 w-4" />
                 Create Report
