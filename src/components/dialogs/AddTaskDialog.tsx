@@ -71,6 +71,7 @@ const AddTaskDialog = ({ onTaskCreated }: AddTaskDialogProps) => {
         assigned_to: '',
         cost: ''
       });
+      onTaskCreated?.();
     } catch (error) {
       toast({
         title: "Error",
