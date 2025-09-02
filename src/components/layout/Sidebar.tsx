@@ -43,11 +43,6 @@ const navigation = [
     href: "/tasks",
   },
   {
-    name: "Daily Logs",
-    icon: ClipboardList,
-    href: "/logs",
-  },
-  {
     name: "Team",
     icon: Users,
     href: "/team",
