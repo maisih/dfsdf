@@ -152,10 +152,12 @@ const Projects = () => {
               <Card key={project.id} className="group hover:shadow-medium transition-all duration-300 border-0 shadow-soft">
                 {/* Project Image */}
                 <div className="relative overflow-hidden rounded-t-lg bg-muted aspect-[4/3]">
-                  <img 
-                    src={constructionHero}
+                  <img
+                    src={getProjectImage(project, 0)}
                     alt={project.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    loading="lazy"
+                    decoding="async"
                   />
                   <div className="absolute top-3 left-3 flex gap-2">
                     {project.status === 'active' && (
