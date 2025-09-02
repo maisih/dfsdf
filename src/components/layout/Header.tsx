@@ -31,7 +31,7 @@ const Header = () => {
   };
   return (
     <>
-    <header className="h-16 bg-gradient-surface border-b border-border px-4 md:px-6 flex items-center justify-between shadow-soft">
+    <header className="h-16 sticky top-0 z-40 bg-gradient-surface/95 backdrop-blur supports-[backdrop-filter]:bg-gradient-surface/70 border-b border-border px-4 md:px-6 flex items-center justify-between shadow-soft">
       <div className="flex items-center gap-3 md:gap-6">
         <Sheet>
           <SheetTrigger asChild>
