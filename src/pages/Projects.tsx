@@ -102,6 +102,11 @@ const Projects = () => {
     return 1;
   };
 
+  const getProjectImage = (project: any, index: number) => {
+    const seed = project.id || project.name || index;
+    return `https://picsum.photos/seed/${encodeURIComponent(seed)}/800/600`;
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
