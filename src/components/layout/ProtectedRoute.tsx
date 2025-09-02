@@ -1,5 +1,4 @@
 import { useInvitationAuth } from '@/contexts/InvitationAuthContext';
-import { useInvitationAuth } from '@/contexts/InvitationAuthContext';
 import { Navigate } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 
