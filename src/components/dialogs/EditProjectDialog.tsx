@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -43,7 +43,7 @@ const EditProjectDialog = ({ project, open, onOpenChange }: EditProjectDialogPro
   });
 
   // Sync when project changes
-  React.useEffect(() => {
+  useEffect(() => {
     setFormData({
       name: project.name || '',
       description: project.description || '',
