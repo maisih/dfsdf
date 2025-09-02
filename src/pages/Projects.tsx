@@ -108,21 +108,21 @@ const Projects = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <div className="flex">
-        <div className="fixed left-0 top-16 h-[calc(100vh-4rem)] bg-gradient-surface border-r border-border shadow-soft overflow-y-auto">
+        <div className="hidden md:block fixed left-0 top-16 h-[calc(100vh-4rem)] bg-gradient-surface border-r border-border shadow-soft overflow-y-auto">
           <Sidebar />
         </div>
         
-        <main className="flex-1 ml-64 p-6">
+        <main className="flex-1 md:ml-64 ml-0 p-4 md:p-6 pb-24">
           {/* Header */}
-          <div className="mb-8">
+          <div className="mb-6 md:mb-8">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h1 className="text-2xl font-bold text-foreground">Construction Projects</h1>
                 <p className="text-muted-foreground mt-1">{filteredProjects.length} projects</p>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 md:gap-4">
                 <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-40">
+                  <SelectTrigger className="w-32 md:w-40">
                     <SelectValue placeholder="Sort by" />
                   </SelectTrigger>
                   <SelectContent>
@@ -144,7 +144,7 @@ const Projects = () => {
           </div>
 
           {/* Projects Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
             {filteredProjects.map((project) => (
               <Card key={project.id} className="group hover:shadow-medium transition-all duration-300 border-0 shadow-soft">
                 {/* Project Image */}
