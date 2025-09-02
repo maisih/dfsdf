@@ -52,7 +52,7 @@ const Tasks = () => {
     switch (status) {
       case "completed":
         return "bg-success/10 text-success border-success/20";
-      case "in_progress":
+      case "in-progress":
         return "bg-primary/10 text-primary border-primary/20";
       case "pending":
         return "bg-warning/10 text-warning border-warning/20";
