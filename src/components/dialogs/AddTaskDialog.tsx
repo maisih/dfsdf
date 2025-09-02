@@ -10,7 +10,9 @@ import { useProject } from "@/contexts/ProjectContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
-const AddTaskDialog = () => {
+interface AddTaskDialogProps { onTaskCreated?: () => void }
+
+const AddTaskDialog = ({ onTaskCreated }: AddTaskDialogProps) => {
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
