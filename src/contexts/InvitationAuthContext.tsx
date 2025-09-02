@@ -159,29 +159,25 @@ export function InvitationAuthProvider({ children }: { children: React.ReactNode
         body: JSON.stringify({ code, fingerprint })
       });
 
-      const contentType = response.headers.get('content-type') || '';
       let result: any = null;
-      if (contentType.includes('application/json')) {
+      let textFallback: string | undefined;
+      try {
+        result = await response.json();
+      } catch {
         try {
-          result = await response.json();
-        } catch (e) {
-          return { success: false, error: `Invalid response from server (JSON parse failed)` };
-        }
-      } else {
-        const text = await response.text();
-        if (!response.ok) {
-          return { success: false, error: text || response.statusText || 'Request failed' };
-        }
-        try {
-          result = JSON.parse(text);
+          textFallback = await response.text();
         } catch {
-          return { success: false, error: 'Invalid response from server' };
+          textFallback = undefined;
         }
       }
 
-      if (!response.ok || !result?.success) {
-        const errMsg = result?.error || response.statusText || 'Validation failed';
+      if (!response.ok) {
+        const errMsg = (result && result.error) || textFallback || (response.status === 401 ? 'Invalid invitation code' : response.statusText || 'Request failed');
         return { success: false, error: errMsg };
+      }
+
+      if (!result?.success) {
+        return { success: false, error: result?.error || 'Validation failed' };
       }
 
       const newUser: InvitationUser = {
