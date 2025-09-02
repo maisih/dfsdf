@@ -274,8 +274,10 @@ const Projects = () => {
           )}
 
           {selectedProject && (
-            <EditProjectDialog 
-              project={selectedProject} 
+            <EditProjectDialog
+              project={selectedProject}
+              open={editOpen}
+              onOpenChange={setEditOpen}
             />
           )}
         </main>
