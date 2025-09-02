@@ -6,7 +6,7 @@ import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
 import AddReportDialog from "@/components/dialogs/AddReportDialog";
 import { useProject } from "@/contexts/ProjectContext";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 const Reports = () => {
