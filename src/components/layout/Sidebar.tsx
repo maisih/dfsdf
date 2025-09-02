@@ -11,7 +11,8 @@ import {
   DollarSign,
   BarChart3,
   FileText,
-  Brain
+  Brain,
+  Shield
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLocation, Link } from "react-router-dom";
@@ -80,6 +81,11 @@ const navigation = [
     name: "AI Assistant",
     icon: Brain,
     href: "/ai",
+  },
+  {
+    name: "Admin",
+    icon: Shield,
+    href: "/admin",
   }
 ];
 

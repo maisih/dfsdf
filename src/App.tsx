@@ -20,6 +20,7 @@ import Reports from "./pages/Reports";
 import Documents from "./pages/Documents";
 import AI from "./pages/AI";
 import Auth from "./pages/Auth";
+import InvitationManagement from "./pages/InvitationManagement";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -46,6 +47,7 @@ const App = () => (
               <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
               <Route path="/documents" element={<ProtectedRoute><Documents /></ProtectedRoute>} />
               <Route path="/ai" element={<ProtectedRoute><AI /></ProtectedRoute>} />
+              <Route path="/admin" element={<ProtectedRoute><InvitationManagement /></ProtectedRoute>} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
