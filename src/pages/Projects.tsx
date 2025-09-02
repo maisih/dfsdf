@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import AddProjectDialog from "@/components/dialogs/AddProjectDialog";
 import EditProjectDialog from "@/components/dialogs/EditProjectDialog";
+import constructionHero from "@/assets/construction-hero.jpg";
 
 const Projects = () => {
   const navigate = useNavigate();
@@ -102,26 +103,6 @@ const Projects = () => {
     return 1;
   };
 
-  const CONSTRUCTION_IMAGES = [
-    "https://images.pexels.com/photos/585419/pexels-photo-585419.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&dpr=1",
-    "https://images.pexels.com/photos/8961065/pexels-photo-8961065.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&dpr=1",
-    "https://images.pexels.com/photos/439416/pexels-photo-439416.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&dpr=1",
-    "https://images.pexels.com/photos/5483071/pexels-photo-5483071.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&dpr=1",
-    "https://images.pexels.com/photos/6004863/pexels-photo-6004863.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&dpr=1",
-    "https://images.pexels.com/photos/1462935/pexels-photo-1462935.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&dpr=1",
-    "https://images.pexels.com/photos/162557/man-lifting-steel-bars-162557.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&dpr=1",
-    "https://images.pexels.com/photos/1108101/pexels-photo-1108101.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&dpr=1",
-    "https://images.pexels.com/photos/585418/pexels-photo-585418.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&dpr=1",
-    "https://images.pexels.com/photos/327780/pexels-photo-327780.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&dpr=1"
-  ];
-
-  const getProjectImage = (project: any, index: number) => {
-    const key = String(project.id || project.name || index);
-    let hash = 0;
-    for (let i = 0; i < key.length; i++) hash = ((hash << 5) - hash) + key.charCodeAt(i);
-    const idx = Math.abs(hash) % CONSTRUCTION_IMAGES.length;
-    return CONSTRUCTION_IMAGES[idx];
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -169,11 +150,9 @@ const Projects = () => {
                 {/* Project Image */}
                 <div className="relative overflow-hidden rounded-t-lg bg-muted aspect-[4/3]">
                   <img
-                    src={getProjectImage(project, 0)}
+                    src={constructionHero}
                     alt={project.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    loading="lazy"
-                    decoding="async"
                   />
                   <div className="absolute top-3 left-3 flex gap-2">
                     {project.status === 'active' && (
