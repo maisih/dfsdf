@@ -70,6 +70,32 @@ const Reports = () => {
       description: "Opening report scheduling interface...",
     });
   };
+
+  const aiOptimization = useMemo(() => {
+    if (!selectedProject) return null;
+    try {
+      const raw = localStorage.getItem(`ai_cost_optimization:${selectedProject.id}`);
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  }, [selectedProject]);
+
+  const exportAICostOptimization = () => {
+    if (!aiOptimization) return;
+    const { projectName, generatedAt, optimization, costMetrics } = aiOptimization;
+    const md = `# AI Cost Optimization Report\n\nProject: ${projectName}\nGenerated: ${new Date(generatedAt).toLocaleString()}\n\n## Summary Metrics\n- Total Budget: ${costMetrics.totalBudget}\n- Spent: ${costMetrics.spent}\n- Remaining: ${costMetrics.remaining}\n- Projected Overrun: ${costMetrics.projectedOverrun}\n\n## Recommendations\n\n${optimization}`;
+    const blob = new Blob([md], { type: 'text/markdown;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const nameSafe = (projectName || 'project').replace(/[^a-z0-9-_]/gi, '_');
+    a.download = `AI_Cost_Optimization_${nameSafe}_${new Date(generatedAt).toISOString().slice(0,10)}.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Available":
