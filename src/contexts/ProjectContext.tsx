@@ -76,16 +76,22 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         .from('projects')
         .select('*')
         .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      setProjects(data || []);
-      
-      // Auto-select first project if none selected
-      if (!selectedProject && data && data.length > 0) {
-        setSelectedProject(data[0]);
+
+      if (error) {
+        throw error;
       }
-    } catch (error) {
-      console.error('Error loading projects:', error);
+
+      const safeData = Array.isArray(data) ? data : [];
+      setProjects(safeData);
+
+      // Auto-select first project if none selected
+      if (!selectedProject && safeData.length > 0) {
+        setSelectedProject(safeData[0]);
+      }
+    } catch (err: any) {
+      const message = err?.message || err?.error?.message || JSON.stringify(err);
+      console.error('Error loading projects:', message);
+      setProjects([]);
     }
   };
 
