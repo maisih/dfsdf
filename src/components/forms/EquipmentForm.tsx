@@ -59,6 +59,7 @@ const EquipmentForm = () => {
           project_id: selectedProject.id,
           priority: 1,
           status: 'pending',
+          cost: formData.cost ? parseFloat(formData.cost) : null,
           created_by: null
         }]);
         
@@ -76,7 +77,8 @@ const EquipmentForm = () => {
         location: '',
         operator: '',
         fuel_level: '',
-        hours_used: ''
+        hours_used: '',
+        cost: ''
       });
     } catch (error) {
       console.error('Equipment creation error:', error);
@@ -180,7 +182,7 @@ const EquipmentForm = () => {
             />
           </div>
           
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-4 gap-4">
             <div className="space-y-2">
               <Label htmlFor="operator">Operator - Optional</Label>
               <Input
@@ -190,7 +192,7 @@ const EquipmentForm = () => {
                 placeholder="Operator name"
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="fuel_level">Fuel Level (%) - Optional</Label>
               <Input
@@ -203,7 +205,7 @@ const EquipmentForm = () => {
                 max="100"
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="hours_used">Hours Used - Optional</Label>
               <Input
@@ -212,6 +214,19 @@ const EquipmentForm = () => {
                 value={formData.hours_used}
                 onChange={(e) => setFormData({ ...formData, hours_used: e.target.value })}
                 placeholder="Total hours"
+                min="0"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="cost">Cost (MAD) - Optional</Label>
+              <Input
+                id="cost"
+                type="number"
+                step="0.01"
+                value={formData.cost}
+                onChange={(e) => setFormData({ ...formData, cost: e.target.value })}
+                placeholder="0.00"
                 min="0"
               />
             </div>
