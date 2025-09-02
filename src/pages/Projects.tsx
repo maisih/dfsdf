@@ -18,6 +18,7 @@ import {
   MoreHorizontal
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
 import { useProject } from "@/contexts/ProjectContext";
@@ -102,12 +103,25 @@ const Projects = () => {
     return 1;
   };
 
+  const CONSTRUCTION_IMAGES = [
+    "https://images.pexels.com/photos/585419/pexels-photo-585419.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&dpr=1",
+    "https://images.pexels.com/photos/8961065/pexels-photo-8961065.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&dpr=1",
+    "https://images.pexels.com/photos/439416/pexels-photo-439416.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&dpr=1",
+    "https://images.pexels.com/photos/5483071/pexels-photo-5483071.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&dpr=1",
+    "https://images.pexels.com/photos/6004863/pexels-photo-6004863.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&dpr=1",
+    "https://images.pexels.com/photos/1462935/pexels-photo-1462935.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&dpr=1",
+    "https://images.pexels.com/photos/162557/man-lifting-steel-bars-162557.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&dpr=1",
+    "https://images.pexels.com/photos/1108101/pexels-photo-1108101.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&dpr=1",
+    "https://images.pexels.com/photos/585418/pexels-photo-585418.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&dpr=1",
+    "https://images.pexels.com/photos/327780/pexels-photo-327780.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&dpr=1"
+  ];
+
   const getProjectImage = (project: any, index: number) => {
     const key = String(project.id || project.name || index);
     let hash = 0;
     for (let i = 0; i < key.length; i++) hash = ((hash << 5) - hash) + key.charCodeAt(i);
-    const sig = Math.abs(hash % 10000);
-    return `https://source.unsplash.com/800x600/?construction,engineering,building,site&sig=${sig}`;
+    const idx = Math.abs(hash) % CONSTRUCTION_IMAGES.length;
+    return CONSTRUCTION_IMAGES[idx];
   };
 
   return (
