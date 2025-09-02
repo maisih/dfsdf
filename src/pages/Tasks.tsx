@@ -118,8 +118,10 @@ const Tasks = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <div className="flex">
-        <Sidebar />
-        <main className="flex-1 p-6">
+        <div className="hidden md:block fixed left-0 top-16 h-[calc(100vh-4rem)] bg-gradient-surface border-r border-border shadow-soft overflow-y-auto">
+          <Sidebar />
+        </div>
+        <main className="flex-1 md:ml-64 ml-0 p-4 md:p-6 pb-24">
           <div className="flex justify-between items-center mb-6">
             <div>
               <h1 className="text-3xl font-bold text-foreground">Tasks & Costs</h1>
@@ -141,17 +143,91 @@ const Tasks = () => {
               <p className="text-muted-foreground">No tasks found for this project</p>
             </div>
           ) : (
-            <div className="grid gap-4">
+            <>
+            {/* Mobile horizontal pager */}
+            <div className="md:hidden -mx-4 px-4 overflow-x-auto snap-x snap-mandatory flex gap-4 pb-2">
+              {tasks.map((task) => (
+                <div key={task.id} className="w-[calc(100vw-2rem)] shrink-0 snap-start">
+                  <Card className={`shadow-soft hover:shadow-medium transition-all duration-300 ${task.status === 'completed' ? 'opacity-75' : ''}`}>
+                    <CardContent className="p-6">
+                      <div className="flex items-start gap-4">
+                        <Checkbox
+                          checked={task.status === 'completed'}
+                          className="mt-1"
+                          onCheckedChange={() => handleStatusChange(task.id, task.status)}
+                        />
+
+                        <div className="flex-1">
+                          <div className="flex items-start justify-between mb-2">
+                            <h3 className={`text-lg font-semibold ${task.status === 'completed' ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
+                              {task.title}
+                            </h3>
+                            <div className="flex gap-2">
+                              <Badge variant="outline" className={getStatusColor(task.status)}>
+                                {task.status}
+                              </Badge>
+                              <Badge variant="outline" className={getPriorityColor(task.priority)}>
+                                {getPriorityLabel(task.priority)}
+                              </Badge>
+                            </div>
+                          </div>
+
+                          <p className="text-sm text-muted-foreground mb-3">{task.description}</p>
+
+                           <div className="flex items-center gap-6 text-sm text-muted-foreground mb-4">
+                             <span className="font-medium text-foreground">{selectedProject.name}</span>
+
+                             <div className="flex items-center gap-1">
+                               <User className="h-4 w-4" />
+                               {task.assigned_to || 'Unassigned'}
+                             </div>
+
+                             <div className="flex items-center gap-1">
+                               <Clock className="h-4 w-4" />
+                               Due: {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No due date'}
+                             </div>
+
+                             <div className="flex items-center gap-1">
+                               <DollarSign className="h-4 w-4" />
+                               <span className="font-medium text-primary">
+                                 Cost: {task.cost ? `${task.cost} MAD` : 'No cost set'}
+                               </span>
+                             </div>
+                           </div>
+
+                           <div className="flex gap-2 flex-wrap">
+                              <EditTaskDialog task={task} onTaskUpdated={loadTasks} />
+                              <Button variant="outline" size="sm">
+                                <MessageCircle className="h-4 w-4 mr-1" />
+                                Comments
+                              </Button>
+                              <UpdateTaskCostDialog task={task} onTaskUpdated={loadTasks} />
+                              <DeleteTaskDialog
+                                taskId={task.id}
+                                taskTitle={task.title}
+                                onTaskDeleted={loadTasks}
+                              />
+                            </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop list */}
+            <div className="hidden md:grid gap-4">
               {tasks.map((task) => (
               <Card key={task.id} className={`shadow-soft hover:shadow-medium transition-all duration-300 ${task.status === 'completed' ? 'opacity-75' : ''}`}>
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4">
-                    <Checkbox 
+                    <Checkbox
                       checked={task.status === 'completed'}
                       className="mt-1"
                       onCheckedChange={() => handleStatusChange(task.id, task.status)}
                     />
-                    
+
                     <div className="flex-1">
                       <div className="flex items-start justify-between mb-2">
                         <h3 className={`text-lg font-semibold ${task.status === 'completed' ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
@@ -166,22 +242,22 @@ const Tasks = () => {
                           </Badge>
                         </div>
                       </div>
-                      
+
                       <p className="text-sm text-muted-foreground mb-3">{task.description}</p>
-                      
+
                        <div className="flex items-center gap-6 text-sm text-muted-foreground mb-4">
                          <span className="font-medium text-foreground">{selectedProject.name}</span>
-                         
+
                          <div className="flex items-center gap-1">
                            <User className="h-4 w-4" />
                            {task.assigned_to || 'Unassigned'}
                          </div>
-                         
+
                          <div className="flex items-center gap-1">
                            <Clock className="h-4 w-4" />
                            Due: {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No due date'}
                          </div>
-                         
+
                          <div className="flex items-center gap-1">
                            <DollarSign className="h-4 w-4" />
                            <span className="font-medium text-primary">
@@ -189,7 +265,7 @@ const Tasks = () => {
                            </span>
                          </div>
                        </div>
-                      
+
                        <div className="flex gap-2 flex-wrap">
                           <EditTaskDialog task={task} onTaskUpdated={loadTasks} />
                           <Button variant="outline" size="sm">
@@ -197,10 +273,10 @@ const Tasks = () => {
                             Comments
                           </Button>
                           <UpdateTaskCostDialog task={task} onTaskUpdated={loadTasks} />
-                          <DeleteTaskDialog 
-                            taskId={task.id} 
-                            taskTitle={task.title} 
-                            onTaskDeleted={loadTasks} 
+                          <DeleteTaskDialog
+                            taskId={task.id}
+                            taskTitle={task.title}
+                            onTaskDeleted={loadTasks}
                           />
                         </div>
                     </div>
@@ -209,6 +285,7 @@ const Tasks = () => {
               </Card>
               ))}
             </div>
+            </>
           )}
         </main>
       </div>
