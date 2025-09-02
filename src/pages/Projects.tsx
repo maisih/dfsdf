@@ -48,6 +48,7 @@ const Projects = () => {
   const navigate = useNavigate();
   const { projects, loadProjects } = useProject();
   const [selectedProject, setSelectedProject] = useState<any>(null);
+  const [editOpen, setEditOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState("All Projects");
   const [sortBy, setSortBy] = useState("Featured");
 
