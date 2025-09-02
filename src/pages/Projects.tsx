@@ -42,7 +42,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import AddProjectDialog from "@/components/dialogs/AddProjectDialog";
 import EditProjectDialog from "@/components/dialogs/EditProjectDialog";
-import constructionHero from "@/assets/construction-hero.jpg";
 
 const Projects = () => {
   const navigate = useNavigate();
