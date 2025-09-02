@@ -29,16 +29,40 @@ const Header = () => {
     });
   };
   return (
-    <header className="h-16 bg-gradient-surface border-b border-border px-6 flex items-center justify-between shadow-soft">
-      <div className="flex items-center gap-6">
+    <header className="h-16 bg-gradient-surface border-b border-border px-4 md:px-6 flex items-center justify-between shadow-soft">
+      <div className="flex items-center gap-3 md:gap-6">
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="icon" className="md:hidden">
+              <Menu className="h-5 w-5" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-64 p-0">
+            <SheetHeader className="p-4">
+              <SheetTitle>Navigation</SheetTitle>
+            </SheetHeader>
+            <nav className="px-2 pb-4 space-y-1">
+              {navigation.map((item) => (
+                <Button key={item.name} variant="ghost" className="w-full justify-start" asChild>
+                  <Link to={item.href}>
+                    <item.icon className="mr-2 h-4 w-4" />
+                    {item.name}
+                  </Link>
+                </Button>
+              ))}
+            </nav>
+          </SheetContent>
+        </Sheet>
         <div className="flex items-center gap-2">
           <Building2 className="h-8 w-8 text-primary" />
           <h1 className="text-xl font-bold text-foreground">SiteFlow Master</h1>
         </div>
-        <ProjectSelector />
+        <div className="hidden sm:block">
+          <ProjectSelector />
+        </div>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 md:gap-4">
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
           <span className="absolute -top-1 -right-1 h-3 w-3 bg-accent rounded-full"></span>
