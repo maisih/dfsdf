@@ -12,6 +12,7 @@ import {
 import ProjectSelector from "@/components/project/ProjectSelector";
 import { useInvitationAuth } from "@/contexts/InvitationAuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { memo } from "react";
 
 const Header = () => {
   const { user, signOut } = useInvitationAuth();
