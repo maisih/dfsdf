@@ -143,6 +143,32 @@ const Budget = () => {
     return <TrendingDown className="h-4 w-4 text-success" />;
   };
 
+  const expenseFormRef = useRef<HTMLDivElement | null>(null);
+  const scrollToExpenseForm = () => {
+    expenseFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setTimeout(() => {
+      const amt = document.getElementById('amount') as HTMLInputElement | null;
+      amt?.focus();
+    }, 400);
+  };
+
+  const exportReport = () => {
+    const headers = ['Category', 'Description', 'Amount (MAD)', 'Date'];
+    const rows = expenses.map(e => [e.category || '', (e.description || '').replace(/\n|\r/g, ' '), String(e.amount || 0), new Date(e.expense_date).toLocaleDateString()]);
+    const totals = ['TOTAL', '', String(totalSpent), ''];
+    const csv = [headers, ...rows, totals].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const nameSafe = (selectedProject?.name || 'project').replace(/[^a-z0-9-_]/gi, '_');
+    a.href = url;
+    a.download = `budget-report_${nameSafe}_${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
