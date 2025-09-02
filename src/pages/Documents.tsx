@@ -102,7 +102,7 @@ const Documents = () => {
               <h1 className="text-3xl font-bold text-foreground">Documents</h1>
               <p className="text-muted-foreground">Manage project documents and drawings</p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <Button variant="outline">Document Library</Button>
               <Button className="gap-2" onClick={() => setShowAddDialog(true)}>
                 <Plus className="h-4 w-4" />
