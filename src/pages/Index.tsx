@@ -86,13 +86,21 @@ const Index = () => {
         .select('quantity, unit_cost')
         .eq('project_id', selectedProject.id);
 
+      // Load task costs (includes equipment cost captured via equipment form)
+      const { data: taskCostsData } = await supabase
+        .from('tasks')
+        .select('cost')
+        .eq('project_id', selectedProject.id)
+        .not('cost', 'is', null);
+
       const totalExpenses = expensesData?.reduce((sum, expense) => sum + (expense.amount || 0), 0) || 0;
       const totalMaterialsCost = materialsData?.reduce((sum, material) => {
         const materialCost = (material.quantity || 0) * (material.unit_cost || 0);
         return sum + materialCost;
       }, 0) || 0;
-      
-      const totalSpent = totalExpenses + totalMaterialsCost;
+      const totalTaskCosts = taskCostsData?.reduce((sum, task) => sum + (task.cost || 0), 0) || 0;
+
+      const totalSpent = totalExpenses + totalMaterialsCost + totalTaskCosts;
       const budgetUtilization = selectedProject.budget > 0 ? Math.round((totalSpent / selectedProject.budget) * 100) : 0;
 
       setStats({
