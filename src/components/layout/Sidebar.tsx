@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLocation, Link } from "react-router-dom";
+import { memo } from "react";
 
 interface SidebarProps {
   className?: string;
