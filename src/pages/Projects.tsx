@@ -103,8 +103,11 @@ const Projects = () => {
   };
 
   const getProjectImage = (project: any, index: number) => {
-    const seed = project.id || project.name || index;
-    return `https://picsum.photos/seed/${encodeURIComponent(seed)}/800/600`;
+    const key = String(project.id || project.name || index);
+    let hash = 0;
+    for (let i = 0; i < key.length; i++) hash = ((hash << 5) - hash) + key.charCodeAt(i);
+    const sig = Math.abs(hash % 10000);
+    return `https://source.unsplash.com/800x600/?construction,engineering,building,site&sig=${sig}`;
   };
 
   return (
