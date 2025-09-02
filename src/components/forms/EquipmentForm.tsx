@@ -17,7 +17,8 @@ const EquipmentForm = () => {
     location: '',
     operator: '',
     fuel_level: '',
-    hours_used: ''
+    hours_used: '',
+    cost: ''
   });
   const [isLoading, setIsLoading] = useState(false);
   const { selectedProject } = useProject();
