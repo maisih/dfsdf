@@ -18,7 +18,6 @@ import {
   MoreHorizontal
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
 import { useProject } from "@/contexts/ProjectContext";
