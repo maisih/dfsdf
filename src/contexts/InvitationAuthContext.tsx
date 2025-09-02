@@ -159,23 +159,42 @@ export function InvitationAuthProvider({ children }: { children: React.ReactNode
         body: JSON.stringify({ code, fingerprint })
       });
 
-      const result = await response.json();
-
-      if (result.success) {
-        const newUser: InvitationUser = {
-          sessionId: result.session.sessionId,
-          role: result.session.role,
-          expiresAt: result.session.expiresAt,
-          fingerprint: result.session.fingerprint
-        };
-
-        setUser(newUser);
-        storeSession(newUser);
-        
-        return { success: true };
+      const contentType = response.headers.get('content-type') || '';
+      let result: any = null;
+      if (contentType.includes('application/json')) {
+        try {
+          result = await response.json();
+        } catch (e) {
+          return { success: false, error: `Invalid response from server (JSON parse failed)` };
+        }
       } else {
-        return { success: false, error: result.error };
+        const text = await response.text();
+        if (!response.ok) {
+          return { success: false, error: text || response.statusText || 'Request failed' };
+        }
+        try {
+          result = JSON.parse(text);
+        } catch {
+          return { success: false, error: 'Invalid response from server' };
+        }
       }
+
+      if (!response.ok || !result?.success) {
+        const errMsg = result?.error || response.statusText || 'Validation failed';
+        return { success: false, error: errMsg };
+      }
+
+      const newUser: InvitationUser = {
+        sessionId: result.session.sessionId,
+        role: result.session.role,
+        expiresAt: result.session.expiresAt,
+        fingerprint: result.session.fingerprint
+      };
+
+      setUser(newUser);
+      storeSession(newUser);
+
+      return { success: true };
     } catch (error) {
       console.error('Error validating invitation:', error);
       return { success: false, error: 'Network error. Please try again.' };
