@@ -128,7 +128,13 @@ All colors MUST be HSL.
     100% { opacity: 1; transform: translateY(0) scale(1); filter: saturate(1); }
   }
   .route-enter {
-    animation: route-enter-keyframes 320ms cubic-bezier(0.4, 0, 0.2, 1);
+    animation: route-enter-keyframes 240ms cubic-bezier(0.4, 0, 0.2, 1);
     will-change: opacity, transform, filter;
+  }
+  @media (max-width: 640px) {
+    .route-enter { animation: none !important; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .route-enter { animation: none !important; }
   }
 }
