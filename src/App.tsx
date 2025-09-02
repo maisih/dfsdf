@@ -13,7 +13,6 @@ import Schedule from "./pages/Schedule";
 import Tasks from "./pages/Tasks";
 import DailyLogs from "./pages/DailyLogs";
 import Team from "./pages/Team";
-import Team from "./pages/Team";
 import Materials from "./pages/Materials";
 import Equipment from "./pages/Equipment";
 import Budget from "./pages/Budget";
