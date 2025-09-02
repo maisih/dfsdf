@@ -268,7 +268,9 @@ const Budget = () => {
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Expense Form */}
-                <ExpenseForm />
+                <div ref={expenseFormRef}>
+                  <ExpenseForm onCreated={loadExpenses} />
+                </div>
 
                 {/* Recent Expenses */}
                 <Card className="shadow-soft">
