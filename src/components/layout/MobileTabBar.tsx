@@ -14,7 +14,6 @@ const defaultTabs = [
 
 const workerTabs = [
   { label: "Reports", href: "/reports", icon: BarChart3 },
-  { label: "AI", href: "/ai", icon: Brain },
 ];
 
 const MobileTabBar = () => {
