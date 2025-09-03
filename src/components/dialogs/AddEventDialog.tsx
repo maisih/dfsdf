@@ -30,7 +30,7 @@ const AddEventDialog = ({ open, onOpenChange, onEventAdded }: AddEventDialogProp
   const { toast } = useToast();
   const { selectedProject } = useProject();
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!title.trim() || !type || !date) {
       toast({
         title: "Error",
@@ -39,19 +39,36 @@ const AddEventDialog = ({ open, onOpenChange, onEventAdded }: AddEventDialogProp
       });
       return;
     }
+    if (!selectedProject) {
+      toast({ title: "No Project Selected", description: "Select a project first.", variant: "destructive" });
+      return;
+    }
 
-    const newEvent = {
-      id: Date.now(),
+    setSubmitting(true);
+    const payload = {
+      project_id: selectedProject.id,
       title: title.trim(),
-      description: description.trim(),
+      description: description.trim() || null,
       type,
       date: date.toISOString(),
-      time: time || "09:00",
-      status: "Scheduled"
-    };
+      time: time || null,
+      status: "Scheduled",
+    } as const;
 
-    onEventAdded(newEvent);
-    
+    const { data, error } = await (supabase as any)
+      .from('events' as any)
+      .insert([payload])
+      .select()
+      .single();
+
+    if (error) {
+      toast({ title: "Error", description: error.message || "Failed to schedule event.", variant: "destructive" });
+      setSubmitting(false);
+      return;
+    }
+
+    onEventAdded?.(data);
+
     toast({
       title: "Success",
       description: "Event scheduled successfully",
@@ -64,6 +81,7 @@ const AddEventDialog = ({ open, onOpenChange, onEventAdded }: AddEventDialogProp
     setDate(undefined);
     setTime("");
     onOpenChange(false);
+    setSubmitting(false);
   };
 
   return (
