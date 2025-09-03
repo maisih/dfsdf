@@ -37,14 +37,21 @@ export function ActiveSessionManager() {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
+  const loadRevokedIds = (): string[] => {
+    try { return JSON.parse(sessionStorage.getItem('revoked_sessions') || '[]'); } catch { return []; }
+  };
+  const saveRevokedIds = (ids: string[]) => {
+    try { sessionStorage.setItem('revoked_sessions', JSON.stringify(ids)); } catch {}
+  };
+
   // Mock data for demonstration - in real implementation, this would fetch from your session store
   const fetchActiveSessions = async () => {
     try {
       setLoading(true);
-      
+
       // Simulated API call - replace with actual session management
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       // Mock active sessions
       const mockSessions: ActiveSession[] = [
         {
