@@ -104,8 +104,9 @@ const AddTaskDialog = ({ onTaskCreated }: AddTaskDialogProps) => {
             <Input
               id="title"
               value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value.slice(0, 200) })}
               placeholder="Enter task title"
+              maxLength={200}
               required
             />
           </div>
@@ -115,9 +116,10 @@ const AddTaskDialog = ({ onTaskCreated }: AddTaskDialogProps) => {
             <Textarea
               id="description"
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value.slice(0, 2000) })}
               placeholder="Task description"
               rows={3}
+              maxLength={2000}
             />
           </div>
           
@@ -157,8 +159,9 @@ const AddTaskDialog = ({ onTaskCreated }: AddTaskDialogProps) => {
               <Input
                 id="assigned_to"
                 value={formData.assigned_to}
-                onChange={(e) => setFormData({ ...formData, assigned_to: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, assigned_to: e.target.value.slice(0, 120) })}
                 placeholder="Worker name or ID"
+                maxLength={120}
               />
             </div>
             
