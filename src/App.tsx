@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { ProjectProvider } from "@/contexts/ProjectContext";
 import { InvitationAuthProvider } from "@/contexts/InvitationAuthContext";
 import { ProtectedRoute, RoleProtectedRoute } from "@/components/layout/ProtectedRoute";
