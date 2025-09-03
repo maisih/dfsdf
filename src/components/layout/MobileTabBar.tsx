@@ -4,7 +4,6 @@ import SmoothLink from "@/components/ui/smooth-link";
 import { LayoutDashboard, FolderOpen, CheckSquare, BarChart3, Brain } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useInvitationAuth } from "@/contexts/InvitationAuthContext";
-import { memo } from "react";
 
 const defaultTabs = [
   { label: "Home", href: "/", icon: LayoutDashboard },
