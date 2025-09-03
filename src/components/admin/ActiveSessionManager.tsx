@@ -74,7 +74,9 @@ export function ActiveSessionManager() {
         }
       ];
       
-      setSessions(mockSessions);
+      const revoked = new Set(loadRevokedIds());
+      const filtered = mockSessions.filter(s => !revoked.has(s.sessionId));
+      setSessions(filtered);
     } catch (error) {
       console.error('Error fetching active sessions:', error);
       toast({
