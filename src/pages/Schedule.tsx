@@ -140,10 +140,12 @@ const Schedule = () => {
               <h1 className="text-3xl font-bold text-foreground">Project Schedule</h1>
               <p className="text-muted-foreground">Monthly calendar view with project events</p>
             </div>
-            <Button className="gap-2" onClick={() => setShowAddDialog(true)}>
-              <Plus className="h-4 w-4" />
-              Add Event
-            </Button>
+            {eventsSupported && (
+              <Button className="gap-2" onClick={() => setShowAddDialog(true)}>
+                <Plus className="h-4 w-4" />
+                Add Event
+              </Button>
+            )}
           </div>
 
           {!selectedProject ? (
