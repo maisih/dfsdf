@@ -18,6 +18,8 @@ import { Button } from "@/components/ui/button";
 import { useLocation } from "react-router-dom";
 import SmoothLink from "@/components/ui/smooth-link";
 import { memo } from "react";
+import { cn } from "@/lib/utils";
+import { useInvitationAuth } from "@/contexts/InvitationAuthContext";
 
 interface SidebarProps {
   className?: string;
@@ -88,13 +90,25 @@ export const navigation = [
 
 const Sidebar = ({ className }: SidebarProps) => {
   const location = useLocation();
+  const { user } = useInvitationAuth();
+  const role = (user?.role || '').toLowerCase();
+
+  const visibleNav = navigation.filter((item) => {
+    if (role === 'worker') {
+      return item.href === '/reports' || item.href === '/ai';
+    }
+    if (item.href === '/admin') {
+      return role === 'admin';
+    }
+    return true;
+  });
 
   return (
     <div className={cn("pb-12 w-64 hidden md:block", className)}>
       <div className="space-y-4 py-4">
         <div className="px-3 py-2">
           <div className="space-y-1">
-            {navigation.map((item) => {
+            {visibleNav.map((item) => {
               const isActive = location.pathname === item.href;
               return (
                 <Button
