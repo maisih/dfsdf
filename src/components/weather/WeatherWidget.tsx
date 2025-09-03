@@ -30,24 +30,67 @@ const WeatherWidget = () => {
   const [weatherData, setWeatherData] = useState<WeatherData[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Mock weather data for Morocco cities (in a real app, you'd use an actual weather API)
-  const generateMockWeather = (city: string): WeatherData[] => {
-    const conditions = ['Sunny', 'Partly Cloudy', 'Cloudy', 'Light Rain', 'Clear', 'Heavy Rain', 'Storm'];
-    const baseTemp = city === 'Casablanca' ? 20 : city === 'Marrakech' ? 25 : 18;
-    
-    return Array.from({ length: 7 }, (_, i) => {
-      const date = new Date();
-      date.setDate(date.getDate() + i);
-      
+  const weatherCodeToCondition = (code: number): string => {
+    if ([0].includes(code)) return 'Clear';
+    if ([1,2,3].includes(code)) return 'Partly Cloudy';
+    if ([45,48].includes(code)) return 'Fog';
+    if ([51,53,55,56,57].includes(code)) return 'Drizzle';
+    if ([61,63,65,80,81,82].includes(code)) return 'Rain';
+    if ([66,67].includes(code)) return 'Freezing Rain';
+    if ([71,73,75,77,85,86].includes(code)) return 'Snow';
+    if ([95,96,99].includes(code)) return 'Storm';
+    return 'Cloudy';
+  };
+
+  const fetchAccurateWeather = async (city: string): Promise<WeatherData[]> => {
+    const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1`);
+    const geo = await geoRes.json();
+    const lat = geo?.results?.[0]?.latitude;
+    const lon = geo?.results?.[0]?.longitude;
+    if (lat == null || lon == null) return [];
+
+    const params = new URLSearchParams({
+      latitude: String(lat),
+      longitude: String(lon),
+      timezone: 'auto',
+      daily: 'weathercode,temperature_2m_max,temperature_2m_min,windspeed_10m_max',
+      hourly: 'relative_humidity_2m'
+    });
+    const wxRes = await fetch(`https://api.open-meteo.com/v1/forecast?${params.toString()}`);
+    const wx = await wxRes.json();
+
+    const days: WeatherData[] = (wx?.daily?.time || []).slice(0,5).map((isoDate: string, idx: number) => {
+      const dateObj = new Date(isoDate);
+      let humidity = 0;
+      if (wx?.hourly?.time && wx?.hourly?.relative_humidity_2m) {
+        const target = new Date(isoDate); target.setHours(12,0,0,0);
+        let bestDiff = Infinity; let bestHum = 0;
+        for (let i=0;i<wx.hourly.time.length;i++) {
+          const t = new Date(wx.hourly.time[i]);
+          if (t.toDateString() !== dateObj.toDateString()) continue;
+          const diff = Math.abs(t.getTime() - target.getTime());
+          if (diff < bestDiff) { bestDiff = diff; bestHum = wx.hourly.relative_humidity_2m[i] ?? 0; }
+        }
+        humidity = bestHum;
+      }
+
+      const tmax = wx?.daily?.temperature_2m_max?.[idx] ?? 0;
+      const tmin = wx?.daily?.temperature_2m_min?.[idx] ?? 0;
+      const wind = wx?.daily?.windspeed_10m_max?.[idx] ?? 0;
+      const code = wx?.daily?.weathercode?.[idx] ?? 3;
+      const condition = weatherCodeToCondition(code);
+
       return {
-        date: date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
-        temperature: baseTemp + Math.floor(Math.random() * 10) - 5,
-        condition: conditions[Math.floor(Math.random() * conditions.length)],
-        humidity: 50 + Math.floor(Math.random() * 30),
-        windSpeed: 5 + Math.floor(Math.random() * 25),
-        icon: conditions[Math.floor(Math.random() * conditions.length)]
+        date: dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
+        temperature: Math.round((tmax + tmin) / 2),
+        condition,
+        humidity: Math.round(humidity),
+        windSpeed: Math.round(wind),
+        icon: condition
       };
     });
+
+    return days;
   };
 
 
@@ -82,17 +125,23 @@ const WeatherWidget = () => {
   };
 
   useEffect(() => {
-    if (selectedProject?.location) {
+    let aborted = false;
+    const run = async () => {
+      if (!selectedProject?.location) {
+        setWeatherData([]); setLoading(false); return;
+      }
       setLoading(true);
-      // Simulate API call delay
-      setTimeout(() => {
-        setWeatherData(generateMockWeather(selectedProject.location));
-        setLoading(false);
-      }, 1000);
-    } else {
-      setWeatherData([]);
-      setLoading(false);
-    }
+      try {
+        const data = await fetchAccurateWeather(selectedProject.location);
+        if (!aborted) setWeatherData(data);
+      } catch {
+        if (!aborted) setWeatherData([]);
+      } finally {
+        if (!aborted) setLoading(false);
+      }
+    };
+    run();
+    return () => { aborted = true; };
   }, [selectedProject]);
 
   return (
