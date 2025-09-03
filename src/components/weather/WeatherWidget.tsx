@@ -179,18 +179,6 @@ const WeatherWidget = () => {
               })}
             </div>
 
-            {/* AI Analysis Results */}
-            {aiAnalysis && (
-              <div className="mt-4 p-4 bg-muted rounded-lg">
-                <h4 className="font-semibold mb-2 flex items-center gap-2">
-                  <Brain className="h-4 w-4" />
-                  AI Weather Risk Analysis
-                </h4>
-                <div className="text-sm text-muted-foreground whitespace-pre-wrap max-h-60 overflow-y-auto">
-                  {aiAnalysis}
-                </div>
-              </div>
-            )}
           </div>
         )}
       </CardContent>
