@@ -76,11 +76,6 @@ export const navigation = [
     href: "/documents",
   },
   {
-    name: "AI Assistant",
-    icon: Brain,
-    href: "/ai",
-  },
-  {
     name: "Admin",
     icon: Shield,
     href: "/admin",
