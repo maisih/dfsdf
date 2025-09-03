@@ -154,17 +154,6 @@ const EditProjectDialog = ({ project, open, onOpenChange }: EditProjectDialogPro
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="progress">Progress (%)</Label>
-              <Input
-                id="progress"
-                type="number"
-                min="0"
-                max="100"
-                value={formData.progress}
-                onChange={(e) => setFormData({ ...formData, progress: parseInt(e.target.value) || 0 })}
-              />
-            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
