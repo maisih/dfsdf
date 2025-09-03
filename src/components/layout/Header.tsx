@@ -10,8 +10,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Link } from "react-router-dom";
 import ProjectSelector from "@/components/project/ProjectSelector";
+import SmoothLink from "@/components/ui/smooth-link";
 import { navigation } from "@/components/layout/Sidebar";
 import { useInvitationAuth } from "@/contexts/InvitationAuthContext";
 import { useToast } from "@/hooks/use-toast";
