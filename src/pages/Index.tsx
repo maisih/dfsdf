@@ -11,7 +11,7 @@ import WeatherWidget from "@/components/weather/WeatherWidget";
 import QuickActions from "@/components/dashboard/QuickActions";
 import RecentActivity from "@/components/dashboard/RecentActivity";
 import ProjectOverview from "@/components/dashboard/ProjectOverview";
-import AIInsights from "@/components/dashboard/AIInsights";
+import { Mail, MapPin } from "lucide-react";
 
 const Index = () => {
   const { selectedProject } = useProject();
@@ -343,7 +343,7 @@ const Index = () => {
                     <div>
                       <div className="text-sm text-muted-foreground">Start Date</div>
                       <div className="text-lg font-semibold text-foreground">
-                        {selectedProject.start_date 
+                        {selectedProject.start_date
                           ? new Date(selectedProject.start_date).toLocaleDateString()
                           : 'Not set'
                         }
@@ -352,16 +352,45 @@ const Index = () => {
                     <div>
                       <div className="text-sm text-muted-foreground">Expected End Date</div>
                       <div className={`text-lg font-semibold ${
-                        getDaysUntilDeadline() !== null && getDaysUntilDeadline()! < 0 
-                          ? 'text-destructive' 
+                        getDaysUntilDeadline() !== null && getDaysUntilDeadline()! < 0
+                          ? 'text-destructive'
                           : 'text-foreground'
                       }`}>
-                        {selectedProject.end_date 
+                        {selectedProject.end_date
                           ? new Date(selectedProject.end_date).toLocaleDateString()
                           : 'Not set'
                         }
                       </div>
                     </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Owner / Contact Section */}
+              <Card className="shadow-soft overflow-hidden">
+                <div className="bg-gradient-to-r from-primary to-primary/70 h-2" />
+                <CardHeader>
+                  <CardTitle className="text-lg">About the Site Owner</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-start md:items-center justify-between gap-4 flex-col md:flex-row">
+                    <div className="flex items-center gap-4">
+                      <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                        MT
+                      </div>
+                      <div>
+                        <div className="text-xl font-semibold text-foreground">Mustapha Tourabi</div>
+                        <div className="text-sm text-muted-foreground flex items-center gap-2">
+                          <MapPin className="h-4 w-4" /> Civil Engineer · Morocco
+                        </div>
+                      </div>
+                    </div>
+                    <a
+                      href="mailto:tourabimustapha10@outlook.com"
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-colors"
+                    >
+                      <Mail className="h-4 w-4" /> Contact: tourabimustapha10@outlook.com
+                    </a>
                   </div>
                 </CardContent>
               </Card>
