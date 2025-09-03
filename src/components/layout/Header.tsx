@@ -46,10 +46,10 @@ const Header = () => {
             <nav className="px-2 pb-4 space-y-1">
               {navigation.map((item) => (
                 <Button key={item.name} variant="ghost" className="w-full justify-start" asChild>
-                  <Link to={item.href}>
+                  <SmoothLink to={item.href}>
                     <item.icon className="mr-2 h-4 w-4" />
                     {item.name}
-                  </Link>
+                  </SmoothLink>
                 </Button>
               ))}
             </nav>
