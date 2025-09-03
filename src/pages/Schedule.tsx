@@ -46,8 +46,8 @@ const Schedule = () => {
     }
   };
 
-  const handleEventAdded = (newEvent: any) => {
-    setEvents([...events, { ...newEvent, id: Date.now() }]);
+  const handleEventAdded = (_newEvent: any) => {
+    loadEvents();
   };
 
   const getEventTypeColor = (type: string) => {
