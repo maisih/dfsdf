@@ -26,7 +26,9 @@ const AddEventDialog = ({ open, onOpenChange, onEventAdded }: AddEventDialogProp
   const [type, setType] = useState("");
   const [date, setDate] = useState<Date>();
   const [time, setTime] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
+  const { selectedProject } = useProject();
 
   const handleSubmit = () => {
     if (!title.trim() || !type || !date) {
