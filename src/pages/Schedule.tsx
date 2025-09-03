@@ -267,7 +267,7 @@ const Schedule = () => {
                               {event.isTask && event.status && (
                                 <Badge variant="outline" className={
                                   event.status === 'completed' ? 'bg-success/10 text-success border-success/20' :
-                                  event.status === 'in_progress' ? 'bg-primary/10 text-primary border-primary/20' :
+                                  event.status === 'in-progress' ? 'bg-primary/10 text-primary border-primary/20' :
                                   'bg-warning/10 text-warning border-warning/20'
                                 }>
                                   {event.status}
