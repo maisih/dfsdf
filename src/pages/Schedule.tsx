@@ -232,7 +232,7 @@ const Schedule = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <CalendarIcon className="h-5 w-5" />
-                    This Month Events
+                    {eventsSupported ? 'This Month Events' : 'This Month Tasks'}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
