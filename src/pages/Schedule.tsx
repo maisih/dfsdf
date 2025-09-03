@@ -236,7 +236,7 @@ const Schedule = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {events.length === 0 && tasks.length === 0 ? (
+                  {(eventsSupported ? events.length === 0 : true) && tasks.length === 0 ? (
                     <div className="text-center py-8">
                       <CalendarIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                       <h3 className="text-lg font-semibold text-foreground mb-2">No Events Scheduled</h3>
