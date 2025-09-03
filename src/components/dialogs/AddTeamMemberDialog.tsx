@@ -8,6 +8,7 @@ import { Plus } from "lucide-react";
 import { useProject } from "@/contexts/ProjectContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { sanitizeText } from "@/lib/utils";
 
 interface AddTeamMemberDialogProps {
   onTeamMemberAdded?: () => void;
