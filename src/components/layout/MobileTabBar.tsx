@@ -1,22 +1,32 @@
 import { memo } from "react";
 import { useLocation } from "react-router-dom";
 import SmoothLink from "@/components/ui/smooth-link";
-import { LayoutDashboard, FolderOpen, CheckSquare, BarChart3 } from "lucide-react";
+import { LayoutDashboard, FolderOpen, CheckSquare, BarChart3, Brain } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useInvitationAuth } from "@/contexts/InvitationAuthContext";
+import { memo } from "react";
 
-const tabs = [
+const defaultTabs = [
   { label: "Home", href: "/", icon: LayoutDashboard },
   { label: "Projects", href: "/projects", icon: FolderOpen },
   { label: "Tasks", href: "/tasks", icon: CheckSquare },
   { label: "Reports", href: "/reports", icon: BarChart3 },
 ];
 
+const workerTabs = [
+  { label: "Reports", href: "/reports", icon: BarChart3 },
+  { label: "AI", href: "/ai", icon: Brain },
+];
+
 const MobileTabBar = () => {
   const location = useLocation();
+  const { user } = useInvitationAuth();
+  const role = (user?.role || '').toLowerCase();
+  const tabs = role === 'worker' ? workerTabs : defaultTabs;
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/70">
-      <div className="grid grid-cols-4">
+      <div className={`grid ${tabs.length === 2 ? 'grid-cols-2' : 'grid-cols-4'}`}>
         {tabs.map((t) => {
           const isActive = location.pathname === t.href || (t.href !== "/" && location.pathname.startsWith(t.href));
           const Icon = t.icon;
