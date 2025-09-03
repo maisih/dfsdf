@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useProject } from "@/contexts/ProjectContext";
+import { sanitizeText } from "@/lib/utils";
 
 interface AddEventDialogProps {
   open: boolean;
@@ -47,8 +48,8 @@ const AddEventDialog = ({ open, onOpenChange, onEventAdded }: AddEventDialogProp
     setSubmitting(true);
     const payload = {
       project_id: selectedProject.id,
-      title: title.trim(),
-      description: description.trim() || null,
+      title: sanitizeText(title.trim()),
+      description: description.trim() ? sanitizeText(description.trim()) : null,
       type,
       date: date.toISOString(),
       time: time || null,
