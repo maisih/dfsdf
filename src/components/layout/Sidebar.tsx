@@ -89,10 +89,10 @@ const Sidebar = ({ className }: SidebarProps) => {
 
   const visibleNav = navigation.filter((item) => {
     if (role === 'worker') {
-      return item.href === '/reports' || item.href === '/ai';
+      return item.href === '/reports';
     }
     if (item.href === '/admin') {
-      return role === 'admin';
+      return role === 'admin' || role === 'engineer';
     }
     return true;
   });
