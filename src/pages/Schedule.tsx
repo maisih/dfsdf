@@ -306,11 +306,13 @@ const Schedule = () => {
             </div>
           )}
           
-          <AddEventDialog
-            open={showAddDialog}
-            onOpenChange={setShowAddDialog}
-            onEventAdded={handleEventAdded}
-          />
+          {eventsSupported && (
+            <AddEventDialog
+              open={showAddDialog}
+              onOpenChange={setShowAddDialog}
+              onEventAdded={handleEventAdded}
+            />
+          )}
         </main>
       </div>
     </div>
