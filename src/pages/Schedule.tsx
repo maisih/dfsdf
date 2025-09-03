@@ -17,6 +17,7 @@ const Schedule = () => {
   const [tasks, setTasks] = useState<any[]>([]);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [eventsSupported, setEventsSupported] = useState(true);
 
   useEffect(() => {
     if (selectedProject) {
