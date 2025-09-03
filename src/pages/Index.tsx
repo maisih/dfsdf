@@ -252,76 +252,80 @@ const Index = () => {
                 </Card>
               </div>
 
-              {/* Weather */}
-              <div className="grid grid-cols-1 gap-6">
+              {/* Weather + Right Column */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                {/* Left: Weather */}
                 <WeatherWidget />
-              </div>
 
-              {/* Active Tasks */}
-              <Card className="shadow-soft">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <AlertTriangle className="h-5 w-5" />
-                    Current Working Tasks
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {activeTasks.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-8">No active tasks found</p>
-                  ) : (
-                    <div className="space-y-4">
-                      {activeTasks.map((task) => (
-                        <div key={task.id} className="flex items-center justify-between p-4 bg-muted/20 rounded-lg">
-                          <div>
-                            <h4 className="font-medium text-foreground">{task.title}</h4>
-                            <p className="text-sm text-muted-foreground">{task.description}</p>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-sm font-medium text-foreground capitalize">
-                              {task.status.replace('_', ' ')}
+                {/* Right: Tasks then Compact Budget */}
+                <div className="space-y-6">
+                  {/* Active Tasks */}
+                  <Card className="shadow-soft">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <AlertTriangle className="h-5 w-5" />
+                        Current Working Tasks
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {activeTasks.length === 0 ? (
+                        <p className="text-center text-muted-foreground py-8">No active tasks found</p>
+                      ) : (
+                        <div className="space-y-4">
+                          {activeTasks.map((task) => (
+                            <div key={task.id} className="flex items-center justify-between p-4 bg-muted/20 rounded-lg">
+                              <div>
+                                <h4 className="font-medium text-foreground">{task.title}</h4>
+                                <p className="text-sm text-muted-foreground">{task.description}</p>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-sm font-medium text-foreground capitalize">
+                                  {task.status.replace('_', ' ')}
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No deadline'}
+                                </div>
+                              </div>
                             </div>
-                            <div className="text-xs text-muted-foreground">
-                              {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No deadline'}
-                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Compact Budget Overview */}
+                  <Card className="shadow-soft">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                        <DollarSign className="h-4 w-4" /> Budget Overview
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-3 gap-4 items-end">
+                        <div>
+                          <div className="text-xs text-muted-foreground">Total</div>
+                          <div className="text-base font-semibold text-foreground">
+                            {selectedProject.budget?.toLocaleString() || '0'} MAD
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Compact Budget Overview below tasks */}
-              <Card className="shadow-soft">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                    <DollarSign className="h-4 w-4" /> Budget Overview
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-3 gap-4 items-end">
-                    <div>
-                      <div className="text-xs text-muted-foreground">Total</div>
-                      <div className="text-base font-semibold text-foreground">
-                        {selectedProject.budget?.toLocaleString() || '0'} MAD
+                        <div>
+                          <div className="text-xs text-muted-foreground">Spent</div>
+                          <div className="text-base font-semibold text-foreground">
+                            {stats.totalExpenses.toLocaleString()} MAD
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-xs text-muted-foreground">Utilization</div>
+                          <div className="text-base font-semibold text-foreground">{stats.budgetUtilization}%</div>
+                        </div>
                       </div>
-                    </div>
-                    <div>
-                      <div className="text-xs text-muted-foreground">Spent</div>
-                      <div className="text-base font-semibold text-foreground">
-                        {stats.totalExpenses.toLocaleString()} MAD
+                      <div className="mt-3">
+                        <Progress value={stats.budgetUtilization} className="h-2" />
                       </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-xs text-muted-foreground">Utilization</div>
-                      <div className="text-base font-semibold text-foreground">{stats.budgetUtilization}%</div>
-                    </div>
-                  </div>
-                  <div className="mt-3">
-                    <Progress value={stats.budgetUtilization} className="h-2" />
-                  </div>
-                </CardContent>
-              </Card>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
 
               {/* Project Timeline */}
               <Card className="shadow-soft">
