@@ -148,8 +148,12 @@ export function InvitationAuthProvider({ children }: { children: React.ReactNode
 
       const fingerprint = generateFingerprint();
       
-      const projectUrl = (import.meta.env.VITE_SUPABASE_URL || 'https://vtilhnvplxngstuetsak.supabase.co').replace(/\/$/, '');
-      const anon = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ0aWxobnZwbHhuZ3N0dWV0c2FrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYzMjM4MjMsImV4cCI6MjA3MTg5OTgyM30.iLObpLXeYY1WZd24q1KowRLtGtZb_fxn7DF5C2WoiZc';
+      const projectUrlRaw = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+      const anon = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+      if (!projectUrlRaw || !anon) {
+        return { success: false, error: 'Server configuration missing. Please set Supabase env variables.' };
+      }
+      const projectUrl = projectUrlRaw.replace(/\/$/, '');
       const response = await fetch(`${projectUrl}/functions/v1/validate-invitation`, {
         method: 'POST',
         headers: {
