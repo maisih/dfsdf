@@ -9,6 +9,7 @@ import { Plus } from "lucide-react";
 import { useProject } from "@/contexts/ProjectContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { sanitizeText } from "@/lib/utils";
 
 interface AddTaskDialogProps { onTaskCreated?: () => void }
 
@@ -44,8 +45,8 @@ const AddTaskDialog = ({ onTaskCreated }: AddTaskDialogProps) => {
       const { error } = await supabase
         .from('tasks')
         .insert([{
-          title: formData.title,
-          description: formData.description,
+          title: sanitizeText(formData.title),
+          description: formData.description ? sanitizeText(formData.description) : null,
           project_id: selectedProject.id,
           priority: parseInt(formData.priority),
           cost: formData.cost ? parseFloat(formData.cost) : null,
