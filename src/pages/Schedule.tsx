@@ -85,9 +85,17 @@ const Schedule = () => {
         .lte('date', monthEnd.toISOString())
         .order('date', { ascending: true });
       if (error) throw error;
+      setEventsSupported(true);
       setEvents(data || []);
-    } catch (error) {
-      console.error('Error loading events:', error);
+    } catch (error: any) {
+      const msg = error?.message || JSON.stringify(error);
+      // 42P01 = undefined_table, or generic "does not exist"
+      if (msg.includes('42P01') || msg.toLowerCase().includes('does not exist')) {
+        setEventsSupported(false);
+        console.warn('Events table not configured; hiding events feature.');
+      } else {
+        console.error('Error loading events:', msg);
+      }
       setEvents([]);
     }
   };
