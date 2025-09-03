@@ -67,7 +67,6 @@ const EditProjectDialog = ({ project, open, onOpenChange }: EditProjectDialogPro
           location: formData.location,
           budget: formData.budget ? parseFloat(formData.budget.toString()) : null,
           status: formData.status,
-          progress: formData.progress,
           start_date: formData.start_date?.toISOString().split('T')[0] || null,
           end_date: formData.end_date?.toISOString().split('T')[0] || null,
         })
