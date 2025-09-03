@@ -101,12 +101,19 @@ export function ActiveSessionManager() {
     try {
       // In real implementation, this would call your session invalidation API
       console.log('Force logout session:', sessionId);
-      
+
+      // Persist revoked session locally so periodic refresh won't re-add it
+      const current = loadRevokedIds();
+      if (!current.includes(sessionId)) {
+        const next = [...current, sessionId];
+        saveRevokedIds(next);
+      }
+
       toast({
         title: "Success",
         description: "Session terminated successfully",
       });
-      
+
       // Remove from local state
       setSessions(prev => prev.filter(s => s.sessionId !== sessionId));
     } catch (error) {
