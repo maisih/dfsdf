@@ -17,11 +17,9 @@ const AddTeamMemberDialog = ({ onTeamMemberAdded }: AddTeamMemberDialogProps) =>
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    profession: '',
     phone: '',
     email: '',
-    role: 'worker',
-    joined_date: new Date().toISOString().split('T')[0]
+    role: 'worker'
   });
   const [isLoading, setIsLoading] = useState(false);
   const { selectedProject } = useProject();
@@ -42,16 +40,15 @@ const AddTeamMemberDialog = ({ onTeamMemberAdded }: AddTeamMemberDialogProps) =>
     setIsLoading(true);
     
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('team_members')
         .insert([{
           project_id: selectedProject.id,
           name: formData.name,
-          profession: formData.profession,
+          profession: 'Team Member',
           phone: formData.phone || null,
           email: formData.email || null,
-          role: formData.role,
-          joined_date: formData.joined_date
+          role: formData.role
         }]);
       
       if (error) throw error;
@@ -64,11 +61,9 @@ const AddTeamMemberDialog = ({ onTeamMemberAdded }: AddTeamMemberDialogProps) =>
       setOpen(false);
       setFormData({
         name: '',
-        profession: '',
         phone: '',
         email: '',
-        role: 'worker',
-        joined_date: new Date().toISOString().split('T')[0]
+        role: 'worker'
       });
       
       if (onTeamMemberAdded) {
@@ -101,28 +96,15 @@ const AddTeamMemberDialog = ({ onTeamMemberAdded }: AddTeamMemberDialogProps) =>
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Enter full name"
-                required
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="profession">Profession</Label>
-              <Input
-                id="profession"
-                value={formData.profession}
-                onChange={(e) => setFormData({ ...formData, profession: e.target.value })}
-                placeholder="e.g., Civil Engineer"
-                required
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="name">Full Name</Label>
+            <Input
+              id="name"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="Enter full name"
+              required
+            />
           </div>
           
           <div className="grid grid-cols-2 gap-4">
@@ -148,38 +130,25 @@ const AddTeamMemberDialog = ({ onTeamMemberAdded }: AddTeamMemberDialogProps) =>
             </div>
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="role">Role</Label>
-              <Select
-                value={formData.role}
-                onValueChange={(value) => setFormData({ ...formData, role: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="manager">Manager</SelectItem>
-                  <SelectItem value="engineer">Engineer</SelectItem>
-                  <SelectItem value="supervisor">Supervisor</SelectItem>
-                  <SelectItem value="foreman">Foreman</SelectItem>
-                  <SelectItem value="worker">Worker</SelectItem>
-                  <SelectItem value="operator">Operator</SelectItem>
-                  <SelectItem value="safety_officer">Safety Officer</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="joined_date">Join Date</Label>
-              <Input
-                id="joined_date"
-                type="date"
-                value={formData.joined_date}
-                onChange={(e) => setFormData({ ...formData, joined_date: e.target.value })}
-                required
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="role">Role</Label>
+            <Select
+              value={formData.role}
+              onValueChange={(value) => setFormData({ ...formData, role: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="manager">Manager</SelectItem>
+                <SelectItem value="engineer">Engineer</SelectItem>
+                <SelectItem value="supervisor">Supervisor</SelectItem>
+                <SelectItem value="foreman">Foreman</SelectItem>
+                <SelectItem value="worker">Worker</SelectItem>
+                <SelectItem value="operator">Operator</SelectItem>
+                <SelectItem value="safety_officer">Safety Officer</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           
           <div className="flex gap-2">
