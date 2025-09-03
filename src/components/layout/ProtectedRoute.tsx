@@ -30,9 +30,10 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 interface RoleProtectedRouteProps {
   children: React.ReactNode;
   allowedRoles: string[];
+  redirectTo?: string;
 }
 
-export function RoleProtectedRoute({ children, allowedRoles }: RoleProtectedRouteProps) {
+export function RoleProtectedRoute({ children, allowedRoles, redirectTo = "/" }: RoleProtectedRouteProps) {
   const { isAuthenticated, loading, user } = useInvitationAuth();
 
   if (loading) {
@@ -54,7 +55,7 @@ export function RoleProtectedRoute({ children, allowedRoles }: RoleProtectedRout
   const role = (user?.role || '').toLowerCase();
   const allowed = allowedRoles.map(r => r.toLowerCase());
   if (!allowed.includes(role)) {
-    return <Navigate to="/" replace />;
+    return <Navigate to={redirectTo} replace />;
   }
 
   return <>{children}</>;
