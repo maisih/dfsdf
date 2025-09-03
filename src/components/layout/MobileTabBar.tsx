@@ -1,5 +1,4 @@
 import { memo } from "react";
-import { memo } from "react";
 import { useLocation } from "react-router-dom";
 import SmoothLink from "@/components/ui/smooth-link";
 import { LayoutDashboard, FolderOpen, CheckSquare, BarChart3 } from "lucide-react";
