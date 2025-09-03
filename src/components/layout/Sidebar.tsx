@@ -18,7 +18,6 @@ import { Button } from "@/components/ui/button";
 import { useLocation } from "react-router-dom";
 import SmoothLink from "@/components/ui/smooth-link";
 import { memo } from "react";
-import { cn } from "@/lib/utils";
 import { useInvitationAuth } from "@/contexts/InvitationAuthContext";
 
 interface SidebarProps {
