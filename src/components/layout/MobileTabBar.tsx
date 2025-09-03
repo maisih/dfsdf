@@ -1,5 +1,6 @@
 import { memo } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+import SmoothLink from "@/components/ui/smooth-link";
 import { LayoutDashboard, FolderOpen, CheckSquare, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -20,7 +21,7 @@ const MobileTabBar = () => {
           const isActive = location.pathname === t.href || (t.href !== "/" && location.pathname.startsWith(t.href));
           const Icon = t.icon;
           return (
-            <Link
+            <SmoothLink
               key={t.href}
               to={t.href}
               className={cn(
@@ -30,7 +31,7 @@ const MobileTabBar = () => {
             >
               <Icon className={cn("h-5 w-5", isActive && "fill-primary/10")}/>
               <span className="leading-none">{t.label}</span>
-            </Link>
+            </SmoothLink>
           );
         })}
       </div>

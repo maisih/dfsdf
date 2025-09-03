@@ -15,7 +15,8 @@ import {
   Shield
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useLocation, Link } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+import SmoothLink from "@/components/ui/smooth-link";
 import { memo } from "react";
 
 interface SidebarProps {
@@ -105,10 +106,10 @@ const Sidebar = ({ className }: SidebarProps) => {
                   )}
                   asChild
                 >
-                  <Link to={item.href}>
+                  <SmoothLink to={item.href}>
                     <item.icon className="h-4 w-4" />
                     {item.name}
-                  </Link>
+                  </SmoothLink>
                 </Button>
               );
             })}

@@ -124,9 +124,18 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Enable native view transitions cross-fade for route changes (Chromium) */
+  #root { view-transition-name: app; }
 }
 
 @layer utilities {
+  /* View Transitions polish */
+  ::view-transition-old(app),
+  ::view-transition-new(app) {
+    animation-duration: 420ms;
+    animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
   @keyframes route-enter-keyframes {
     0% { opacity: 0; transform: translateY(12px) scale(0.985); filter: saturate(0.92) blur(1px); }
     60% { opacity: 1; transform: translateY(0) scale(1); filter: saturate(1) blur(0); }
