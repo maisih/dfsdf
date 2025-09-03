@@ -17,7 +17,6 @@ const Equipment = lazy(() => import("./pages/Equipment"));
 const Budget = lazy(() => import("./pages/Budget"));
 const Reports = lazy(() => import("./pages/Reports"));
 const Documents = lazy(() => import("./pages/Documents"));
-const AI = lazy(() => import("./pages/AI"));
 const Auth = lazy(() => import("./pages/Auth"));
 const InvitationManagement = lazy(() => import("./pages/InvitationManagement"));
 const NotFound = lazy(() => import("./pages/NotFound"));
