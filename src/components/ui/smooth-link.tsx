@@ -42,8 +42,9 @@ const SmoothLink = React.forwardRef<HTMLAnchorElement, SmoothLinkProps>(
       go();
     };
 
+    const rel = rest.target === "_blank" ? (rest.rel ? `${rest.rel} noopener noreferrer` : "noopener noreferrer") : rest.rel;
     return (
-      <a href={to} ref={ref} onClick={handleClick} {...rest}>
+      <a href={to} ref={ref} onClick={handleClick} {...rest} rel={rel}>
         {children}
       </a>
     );
