@@ -7,7 +7,6 @@ import { lazy, Suspense, useEffect } from "react";
 import { ProjectProvider } from "@/contexts/ProjectContext";
 import { InvitationAuthProvider } from "@/contexts/InvitationAuthContext";
 import { ProtectedRoute, RoleProtectedRoute } from "@/components/layout/ProtectedRoute";
-import AIAssistantBubble from "@/components/ai/AIAssistantBubble";
 const Index = lazy(() => import("./pages/Index"));
 const Projects = lazy(() => import("./pages/Projects"));
 const Schedule = lazy(() => import("./pages/Schedule"));
