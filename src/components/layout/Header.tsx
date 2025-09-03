@@ -17,7 +17,6 @@ import { useInvitationAuth } from "@/contexts/InvitationAuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { memo } from "react";
 import MobileTabBar from "@/components/layout/MobileTabBar";
-import { useInvitationAuth } from "@/contexts/InvitationAuthContext";
 
 const Header = () => {
   const { user, signOut } = useInvitationAuth();
@@ -30,7 +29,6 @@ const Header = () => {
       description: "You have been signed out successfully.",
     });
   };
-  const { user } = useInvitationAuth();
   const role = (user?.role || '').toLowerCase();
   const visibleNav = navigation.filter((item) => {
     if (role === 'worker') return item.href === '/reports' || item.href === '/ai';
