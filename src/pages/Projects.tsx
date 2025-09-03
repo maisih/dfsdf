@@ -255,13 +255,33 @@ const Projects = () => {
                       </div>
                     </div>
 
-                    {/* Color variants (representing different phases/aspects) */}
-                    <div className="flex items-center gap-1 pt-2">
-                      <div className="w-3 h-3 rounded-full bg-primary border border-white shadow-sm" title="Planning"></div>
-                      <div className="w-3 h-3 rounded-full bg-success border border-white shadow-sm" title="Construction"></div>
-                      <div className="w-3 h-3 rounded-full bg-warning border border-white shadow-sm" title="Finishing"></div>
-                      <div className="w-3 h-3 rounded-full bg-muted border border-white shadow-sm" title="Inspection"></div>
-                    </div>
+                    {/* Dynamic phase indicators based on description ("phases: A, B, C") or defaults */}
+                    {(() => {
+                      const desc = project.description || '';
+                      const match = desc.match(/phases:\s*([^\n;]+)/i);
+                      const parsed = match ? match[1].split(',').map(s => s.trim()).filter(Boolean) : [];
+                      const phases = parsed.length > 0 ? parsed.slice(0, 8) : [
+                        'Planning','Construction','Finishing','Inspection'
+                      ];
+                      const progress = Math.max(0, Math.min(100, project.progress || 0));
+                      const segment = 100 / phases.length;
+                      const currentIdx = Math.min(phases.length - 1, Math.floor(progress / segment));
+                      return (
+                        <div className="flex items-center gap-1 pt-2">
+                          {phases.map((name: string, idx: number) => {
+                            const state = idx < currentIdx ? 'done' : idx === currentIdx ? 'current' : 'upcoming';
+                            const color = state === 'done' ? 'bg-success' : state === 'current' ? 'bg-primary' : 'bg-muted';
+                            return (
+                              <div
+                                key={idx}
+                                className={`w-3 h-3 rounded-full ${color} border border-white shadow-sm`}
+                                title={name}
+                              />
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </CardContent>
               </Card>
