@@ -39,16 +39,16 @@ const AnimatedRoutes = () => {
       <div key={location.pathname} className="route-enter">
         <Routes location={location}>
           <Route path="/auth" element={<Auth />} />
-          <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-          <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
-          <Route path="/schedule" element={<ProtectedRoute><Schedule /></ProtectedRoute>} />
-          <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
-          <Route path="/team" element={<ProtectedRoute><Team /></ProtectedRoute>} />
-          <Route path="/materials" element={<ProtectedRoute><Materials /></ProtectedRoute>} />
-          <Route path="/equipment" element={<ProtectedRoute><Equipment /></ProtectedRoute>} />
-          <Route path="/budget" element={<ProtectedRoute><Budget /></ProtectedRoute>} />
+          <Route path="/" element={<RoleProtectedRoute allowedRoles={["engineer","visitor"]} redirectTo="/reports"><Index /></RoleProtectedRoute>} />
+          <Route path="/projects" element={<RoleProtectedRoute allowedRoles={["engineer","visitor"]} redirectTo="/reports"><Projects /></RoleProtectedRoute>} />
+          <Route path="/schedule" element={<RoleProtectedRoute allowedRoles={["engineer","visitor"]} redirectTo="/reports"><Schedule /></RoleProtectedRoute>} />
+          <Route path="/tasks" element={<RoleProtectedRoute allowedRoles={["engineer","visitor"]} redirectTo="/reports"><Tasks /></RoleProtectedRoute>} />
+          <Route path="/team" element={<RoleProtectedRoute allowedRoles={["engineer","visitor"]} redirectTo="/reports"><Team /></RoleProtectedRoute>} />
+          <Route path="/materials" element={<RoleProtectedRoute allowedRoles={["engineer","visitor"]} redirectTo="/reports"><Materials /></RoleProtectedRoute>} />
+          <Route path="/equipment" element={<RoleProtectedRoute allowedRoles={["engineer","visitor"]} redirectTo="/reports"><Equipment /></RoleProtectedRoute>} />
+          <Route path="/budget" element={<RoleProtectedRoute allowedRoles={["engineer","visitor"]} redirectTo="/reports"><Budget /></RoleProtectedRoute>} />
           <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
-          <Route path="/documents" element={<ProtectedRoute><Documents /></ProtectedRoute>} />
+          <Route path="/documents" element={<RoleProtectedRoute allowedRoles={["engineer","visitor"]} redirectTo="/reports"><Documents /></RoleProtectedRoute>} />
           <Route path="/ai" element={<ProtectedRoute><AI /></ProtectedRoute>} />
           <Route path="/admin" element={<RoleProtectedRoute allowedRoles={["admin"]}><InvitationManagement /></RoleProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
