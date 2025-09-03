@@ -21,10 +21,12 @@ const Schedule = () => {
   useEffect(() => {
     if (selectedProject) {
       loadTasks();
+      loadEvents();
     } else {
       setTasks([]);
+      setEvents([]);
     }
-  }, [selectedProject]);
+  }, [selectedProject, currentDate]);
 
   const loadTasks = async () => {
     if (!selectedProject) return;
