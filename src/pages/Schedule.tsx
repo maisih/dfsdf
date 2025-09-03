@@ -73,6 +73,24 @@ const Schedule = () => {
   const monthEnd = endOfMonth(currentDate);
   const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
 
+  const loadEvents = async () => {
+    if (!selectedProject) return;
+    try {
+      const { data, error } = await (supabase as any)
+        .from('events' as any)
+        .select('*')
+        .eq('project_id', selectedProject.id)
+        .gte('date', monthStart.toISOString())
+        .lte('date', monthEnd.toISOString())
+        .order('date', { ascending: true });
+      if (error) throw error;
+      setEvents(data || []);
+    } catch (error) {
+      console.error('Error loading events:', error);
+      setEvents([]);
+    }
+  };
+
   const getEventsForDay = (day: Date) => {
     const dayEvents = events.filter(event => isSameDay(new Date(event.date), day));
     const dayTasks = tasks.filter(task => task.due_date && isSameDay(new Date(task.due_date), day));
