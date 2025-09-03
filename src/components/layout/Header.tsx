@@ -31,8 +31,8 @@ const Header = () => {
   };
   const role = (user?.role || '').toLowerCase();
   const visibleNav = navigation.filter((item) => {
-    if (role === 'worker') return item.href === '/reports' || item.href === '/ai';
-    if (item.href === '/admin') return role === 'admin';
+    if (role === 'worker') return item.href === '/reports';
+    if (item.href === '/admin') return role === 'admin' || role === 'engineer';
     return true;
   });
 
