@@ -45,11 +45,11 @@ const AddTeamMemberDialog = ({ onTeamMemberAdded }: AddTeamMemberDialogProps) =>
         .from('team_members')
         .insert([{
           project_id: selectedProject.id,
-          name: formData.name,
+          name: sanitizeText(formData.name),
           profession: 'Team Member',
-          phone: formData.phone || null,
-          email: formData.email || null,
-          role: formData.role
+          phone: formData.phone ? sanitizeText(formData.phone) : null,
+          email: formData.email ? sanitizeText(formData.email) : null,
+          role: sanitizeText(formData.role)
         }]);
       
       if (error) throw error;
