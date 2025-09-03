@@ -53,7 +53,7 @@ const Header = () => {
               <SheetTitle>Navigation</SheetTitle>
             </SheetHeader>
             <nav className="px-2 pb-4 space-y-1">
-              {navigation.map((item) => (
+              {visibleNav.map((item) => (
                 <Button key={item.name} variant="ghost" className="w-full justify-start" asChild>
                   <SmoothLink to={item.href}>
                     <item.icon className="mr-2 h-4 w-4" />
