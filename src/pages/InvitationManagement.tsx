@@ -22,7 +22,7 @@ export default function InvitationManagement() {
     );
   }
 
-  if (!user || user.role !== 'engineer') {
+  if (!user || (user.role !== 'engineer' && user.role !== 'admin')) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <Card className="max-w-md w-full">
@@ -32,7 +32,7 @@ export default function InvitationManagement() {
               Access Denied
             </CardTitle>
             <CardDescription>
-              You need engineer privileges to access invitation management.
+              You need engineer or admin privileges to access invitation management.
             </CardDescription>
           </CardHeader>
           <CardContent>
