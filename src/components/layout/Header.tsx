@@ -17,6 +17,7 @@ import { useInvitationAuth } from "@/contexts/InvitationAuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { memo } from "react";
 import MobileTabBar from "@/components/layout/MobileTabBar";
+import { useInvitationAuth } from "@/contexts/InvitationAuthContext";
 
 const Header = () => {
   const { user, signOut } = useInvitationAuth();
