@@ -175,11 +175,11 @@ const AddEventDialog = ({ open, onOpenChange, onEventAdded }: AddEventDialogProp
             </Button>
             <Button
               onClick={handleSubmit}
-              disabled={!title.trim() || !type || !date}
+              disabled={!title.trim() || !type || !date || submitting}
               className="gap-2"
             >
               <Plus className="h-4 w-4" />
-              Schedule Event
+              {submitting ? 'Scheduling…' : 'Schedule Event'}
             </Button>
           </div>
         </div>
