@@ -74,8 +74,9 @@ const AddEventDialog = ({ open, onOpenChange, onEventAdded }: AddEventDialogProp
             <Input
               id="title"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => setTitle(e.target.value.slice(0, 200))}
               placeholder="Enter event title"
+              maxLength={200}
             />
           </div>
 
@@ -139,9 +140,10 @@ const AddEventDialog = ({ open, onOpenChange, onEventAdded }: AddEventDialogProp
             <Textarea
               id="description"
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e) => setDescription(e.target.value.slice(0, 2000))}
               placeholder="Optional description"
               rows={3}
+              maxLength={2000}
             />
           </div>
 
