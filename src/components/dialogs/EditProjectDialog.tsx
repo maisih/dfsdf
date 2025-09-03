@@ -49,7 +49,6 @@ const EditProjectDialog = ({ project, open, onOpenChange }: EditProjectDialogPro
       location: project.location || '',
       budget: project.budget || '',
       status: project.status || 'planning',
-      progress: project.progress || 0,
       start_date: project.start_date ? new Date(project.start_date) : undefined,
       end_date: project.end_date ? new Date(project.end_date) : undefined,
     });
