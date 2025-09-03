@@ -10,7 +10,9 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { DollarSign, Receipt } from "lucide-react";
 
-const ExpenseForm = () => {
+interface ExpenseFormProps { onCreated?: () => void }
+
+const ExpenseForm = ({ onCreated }: ExpenseFormProps) => {
   const [formData, setFormData] = useState({
     amount: '',
     category: '',
@@ -63,6 +65,7 @@ const ExpenseForm = () => {
         description: '',
         expense_date: new Date().toISOString().split('T')[0]
       });
+      onCreated?.();
     } catch (error) {
       console.error('Expense creation error:', error);
       toast({

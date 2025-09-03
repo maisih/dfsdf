@@ -45,9 +45,9 @@ Provide:
       if (error) throw error;
 
       setOptimization(data.response);
-      
+
       // Set basic cost metrics from project data
-      setCostMetrics({
+      const metrics = {
         totalBudget: selectedProject.budget || 0,
         spent: selectedProject.spent || 0,
         remaining: (selectedProject.budget || 0) - (selectedProject.spent || 0),
@@ -55,7 +55,22 @@ Provide:
         taskCosts: 0,
         expensesByCategory: {},
         projectedOverrun: Math.max(0, (selectedProject.spent || 0) - (selectedProject.budget || 0))
-      });
+      };
+      setCostMetrics(metrics);
+
+      // Persist for Reports export
+      try {
+        const payload = {
+          projectId: selectedProject.id,
+          projectName: selectedProject.name,
+          generatedAt: new Date().toISOString(),
+          optimization: data.response,
+          costMetrics: metrics,
+        };
+        localStorage.setItem(`ai_cost_optimization:${selectedProject.id}`, JSON.stringify(payload));
+      } catch (e) {
+        console.warn('Failed to persist AI optimization:', e);
+      }
 
       toast({
         title: "Cost Optimization Complete",

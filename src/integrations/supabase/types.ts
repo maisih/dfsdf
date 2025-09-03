@@ -65,6 +65,50 @@ export type Database = {
         }
         Relationships: []
       }
+      events: {
+        Row: {
+          id: string
+          created_at: string
+          project_id: string
+          title: string
+          description: string | null
+          type: string | null
+          date: string
+          time: string | null
+          status: string | null
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          project_id: string
+          title: string
+          description?: string | null
+          type?: string | null
+          date: string
+          time?: string | null
+          status?: string | null
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          project_id?: string
+          title?: string
+          description?: string | null
+          type?: string | null
+          date?: string
+          time?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           created_at: string

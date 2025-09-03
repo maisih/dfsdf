@@ -9,8 +9,11 @@ import { Plus } from "lucide-react";
 import { useProject } from "@/contexts/ProjectContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { sanitizeText } from "@/lib/utils";
 
-const AddTaskDialog = () => {
+interface AddTaskDialogProps { onTaskCreated?: () => void }
+
+const AddTaskDialog = ({ onTaskCreated }: AddTaskDialogProps) => {
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
@@ -42,8 +45,8 @@ const AddTaskDialog = () => {
       const { error } = await supabase
         .from('tasks')
         .insert([{
-          title: formData.title,
-          description: formData.description,
+          title: sanitizeText(formData.title),
+          description: formData.description ? sanitizeText(formData.description) : null,
           project_id: selectedProject.id,
           priority: parseInt(formData.priority),
           cost: formData.cost ? parseFloat(formData.cost) : null,
@@ -60,9 +63,6 @@ const AddTaskDialog = () => {
         description: "Task has been successfully created.",
       });
       
-      // Refresh the page to show the new task
-      window.location.reload();
-      
       setOpen(false);
       setFormData({
         title: '',
@@ -72,6 +72,7 @@ const AddTaskDialog = () => {
         assigned_to: '',
         cost: ''
       });
+      onTaskCreated?.();
     } catch (error) {
       toast({
         title: "Error",
@@ -104,8 +105,9 @@ const AddTaskDialog = () => {
             <Input
               id="title"
               value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value.slice(0, 200) })}
               placeholder="Enter task title"
+              maxLength={200}
               required
             />
           </div>
@@ -115,9 +117,10 @@ const AddTaskDialog = () => {
             <Textarea
               id="description"
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value.slice(0, 2000) })}
               placeholder="Task description"
               rows={3}
+              maxLength={2000}
             />
           </div>
           
@@ -157,8 +160,9 @@ const AddTaskDialog = () => {
               <Input
                 id="assigned_to"
                 value={formData.assigned_to}
-                onChange={(e) => setFormData({ ...formData, assigned_to: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, assigned_to: e.target.value.slice(0, 120) })}
                 placeholder="Worker name or ID"
+                maxLength={120}
               />
             </div>
             

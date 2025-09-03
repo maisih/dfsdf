@@ -120,17 +120,27 @@ export function InvitationAuthProvider({ children }: { children: React.ReactNode
     // Set up session validation interval (every 5 minutes)
     const intervalId = setInterval(() => {
       const currentSession = getStoredSession();
-      if (!currentSession && user) {
-        // Session expired
-        setUser(null);
-      } else if (currentSession && !user) {
-        // Session restored
-        setUser(currentSession);
-      }
+      setUser((prev) => {
+        if (!currentSession) {
+          return null;
+        }
+        if (!prev) {
+          return currentSession;
+        }
+        if (
+          prev.sessionId !== currentSession.sessionId ||
+          prev.expiresAt !== currentSession.expiresAt ||
+          prev.role !== currentSession.role ||
+          prev.fingerprint !== currentSession.fingerprint
+        ) {
+          return currentSession;
+        }
+        return prev;
+      });
     }, 5 * 60 * 1000);
 
     return () => clearInterval(intervalId);
-  }, [user]);
+  }, []);
 
   const validateInvitation = async (code: string): Promise<{ success: boolean; error?: string }> => {
     try {
@@ -138,32 +148,53 @@ export function InvitationAuthProvider({ children }: { children: React.ReactNode
 
       const fingerprint = generateFingerprint();
       
-      const response = await fetch(`https://vtilhnvplxngstuetsak.supabase.co/functions/v1/validate-invitation`, {
+      const projectUrlRaw = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+      const anon = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+      if (!projectUrlRaw || !anon) {
+        return { success: false, error: 'Server configuration missing. Please set Supabase env variables.' };
+      }
+      const projectUrl = projectUrlRaw.replace(/\/$/, '');
+      const response = await fetch(`${projectUrl}/functions/v1/validate-invitation`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ0aWxobnZwbHhuZ3N0dWV0c2FrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYzMjM4MjMsImV4cCI6MjA3MTg5OTgyM30.iLObpLXeYY1WZd24q1KowRLtGtZb_fxn7DF5C2WoiZc'}`
+          'Authorization': `Bearer ${anon}`
         },
         body: JSON.stringify({ code, fingerprint })
       });
 
-      const result = await response.json();
-
-      if (result.success) {
-        const newUser: InvitationUser = {
-          sessionId: result.session.sessionId,
-          role: result.session.role,
-          expiresAt: result.session.expiresAt,
-          fingerprint: result.session.fingerprint
-        };
-
-        setUser(newUser);
-        storeSession(newUser);
-        
-        return { success: true };
-      } else {
-        return { success: false, error: result.error };
+      let result: any = null;
+      let textFallback: string | undefined;
+      try {
+        result = await response.json();
+      } catch {
+        try {
+          textFallback = await response.text();
+        } catch {
+          textFallback = undefined;
+        }
       }
+
+      if (!response.ok) {
+        const errMsg = (result && result.error) || textFallback || (response.status === 401 ? 'Invalid invitation code' : response.statusText || 'Request failed');
+        return { success: false, error: errMsg };
+      }
+
+      if (!result?.success) {
+        return { success: false, error: result?.error || 'Validation failed' };
+      }
+
+      const newUser: InvitationUser = {
+        sessionId: result.session.sessionId,
+        role: result.session.role,
+        expiresAt: result.session.expiresAt,
+        fingerprint: result.session.fingerprint
+      };
+
+      setUser(newUser);
+      storeSession(newUser);
+
+      return { success: true };
     } catch (error) {
       console.error('Error validating invitation:', error);
       return { success: false, error: 'Network error. Please try again.' };

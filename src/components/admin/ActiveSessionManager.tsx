@@ -37,14 +37,21 @@ export function ActiveSessionManager() {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
+  const loadRevokedIds = (): string[] => {
+    try { return JSON.parse(sessionStorage.getItem('revoked_sessions') || '[]'); } catch { return []; }
+  };
+  const saveRevokedIds = (ids: string[]) => {
+    try { sessionStorage.setItem('revoked_sessions', JSON.stringify(ids)); } catch {}
+  };
+
   // Mock data for demonstration - in real implementation, this would fetch from your session store
   const fetchActiveSessions = async () => {
     try {
       setLoading(true);
-      
+
       // Simulated API call - replace with actual session management
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       // Mock active sessions
       const mockSessions: ActiveSession[] = [
         {
@@ -67,7 +74,9 @@ export function ActiveSessionManager() {
         }
       ];
       
-      setSessions(mockSessions);
+      const revoked = new Set(loadRevokedIds());
+      const filtered = mockSessions.filter(s => !revoked.has(s.sessionId));
+      setSessions(filtered);
     } catch (error) {
       console.error('Error fetching active sessions:', error);
       toast({
@@ -92,12 +101,19 @@ export function ActiveSessionManager() {
     try {
       // In real implementation, this would call your session invalidation API
       console.log('Force logout session:', sessionId);
-      
+
+      // Persist revoked session locally so periodic refresh won't re-add it
+      const current = loadRevokedIds();
+      if (!current.includes(sessionId)) {
+        const next = [...current, sessionId];
+        saveRevokedIds(next);
+      }
+
       toast({
         title: "Success",
         description: "Session terminated successfully",
       });
-      
+
       // Remove from local state
       setSessions(prev => prev.filter(s => s.sessionId !== sessionId));
     } catch (error) {

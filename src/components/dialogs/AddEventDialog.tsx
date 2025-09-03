@@ -11,6 +11,9 @@ import { CalendarIcon, Plus } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { useProject } from "@/contexts/ProjectContext";
+import { sanitizeText } from "@/lib/utils";
 
 interface AddEventDialogProps {
   open: boolean;
@@ -24,9 +27,11 @@ const AddEventDialog = ({ open, onOpenChange, onEventAdded }: AddEventDialogProp
   const [type, setType] = useState("");
   const [date, setDate] = useState<Date>();
   const [time, setTime] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
+  const { selectedProject } = useProject();
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!title.trim() || !type || !date) {
       toast({
         title: "Error",
@@ -35,19 +40,36 @@ const AddEventDialog = ({ open, onOpenChange, onEventAdded }: AddEventDialogProp
       });
       return;
     }
+    if (!selectedProject) {
+      toast({ title: "No Project Selected", description: "Select a project first.", variant: "destructive" });
+      return;
+    }
 
-    const newEvent = {
-      id: Date.now(),
-      title: title.trim(),
-      description: description.trim(),
+    setSubmitting(true);
+    const payload = {
+      project_id: selectedProject.id,
+      title: sanitizeText(title.trim()),
+      description: description.trim() ? sanitizeText(description.trim()) : null,
       type,
       date: date.toISOString(),
-      time: time || "09:00",
-      status: "Scheduled"
-    };
+      time: time || null,
+      status: "Scheduled",
+    } as const;
 
-    onEventAdded(newEvent);
-    
+    const { data, error } = await (supabase as any)
+      .from('events' as any)
+      .insert([payload])
+      .select()
+      .single();
+
+    if (error) {
+      toast({ title: "Error", description: error.message || "Failed to schedule event.", variant: "destructive" });
+      setSubmitting(false);
+      return;
+    }
+
+    onEventAdded?.(data);
+
     toast({
       title: "Success",
       description: "Event scheduled successfully",
@@ -60,6 +82,7 @@ const AddEventDialog = ({ open, onOpenChange, onEventAdded }: AddEventDialogProp
     setDate(undefined);
     setTime("");
     onOpenChange(false);
+    setSubmitting(false);
   };
 
   return (
@@ -74,8 +97,9 @@ const AddEventDialog = ({ open, onOpenChange, onEventAdded }: AddEventDialogProp
             <Input
               id="title"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => setTitle(e.target.value.slice(0, 200))}
               placeholder="Enter event title"
+              maxLength={200}
             />
           </div>
 
@@ -139,9 +163,10 @@ const AddEventDialog = ({ open, onOpenChange, onEventAdded }: AddEventDialogProp
             <Textarea
               id="description"
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e) => setDescription(e.target.value.slice(0, 2000))}
               placeholder="Optional description"
               rows={3}
+              maxLength={2000}
             />
           </div>
 
@@ -151,11 +176,11 @@ const AddEventDialog = ({ open, onOpenChange, onEventAdded }: AddEventDialogProp
             </Button>
             <Button
               onClick={handleSubmit}
-              disabled={!title.trim() || !type || !date}
+              disabled={!title.trim() || !type || !date || submitting}
               className="gap-2"
             >
               <Plus className="h-4 w-4" />
-              Schedule Event
+              {submitting ? 'Scheduling…' : 'Schedule Event'}
             </Button>
           </div>
         </div>

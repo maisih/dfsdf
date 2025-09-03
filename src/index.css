@@ -117,7 +117,39 @@ All colors MUST be HSL.
     @apply border-border;
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* Enable native view transitions cross-fade for route changes (Chromium) */
+  #root { view-transition-name: app; }
+}
+
+@layer utilities {
+  /* View Transitions polish */
+  ::view-transition-old(app),
+  ::view-transition-new(app) {
+    animation-duration: 420ms;
+    animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  @keyframes route-enter-keyframes {
+    0% { opacity: 0; transform: translateY(12px) scale(0.985); filter: saturate(0.92) blur(1px); }
+    60% { opacity: 1; transform: translateY(0) scale(1); filter: saturate(1) blur(0); }
+    100% { opacity: 1; transform: translateY(0) scale(1); filter: saturate(1) blur(0); }
+  }
+  .route-enter {
+    animation: route-enter-keyframes 420ms cubic-bezier(0.22, 0.61, 0.36, 1);
+    will-change: opacity, transform, filter;
+    backface-visibility: hidden;
+  }
+  @media (max-width: 640px) {
+    .route-enter { animation-duration: 240ms; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .route-enter { animation: none !important; }
   }
 }

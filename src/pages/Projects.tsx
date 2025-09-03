@@ -48,6 +48,7 @@ const Projects = () => {
   const navigate = useNavigate();
   const { projects, loadProjects } = useProject();
   const [selectedProject, setSelectedProject] = useState<any>(null);
+  const [editOpen, setEditOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState("All Projects");
   const [sortBy, setSortBy] = useState("Featured");
 
@@ -102,25 +103,26 @@ const Projects = () => {
     return 1;
   };
 
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
       <div className="flex">
-        <div className="fixed left-0 top-16 h-[calc(100vh-4rem)] bg-gradient-surface border-r border-border shadow-soft overflow-y-auto">
+        <div className="hidden md:block fixed left-0 top-16 h-[calc(100vh-4rem)] bg-gradient-surface border-r border-border shadow-soft overflow-y-auto">
           <Sidebar />
         </div>
         
-        <main className="flex-1 ml-64 p-6">
+        <main className="flex-1 md:ml-64 ml-0 p-4 md:p-6 pb-24">
           {/* Header */}
-          <div className="mb-8">
+          <div className="mb-6 md:mb-8">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h1 className="text-2xl font-bold text-foreground">Construction Projects</h1>
                 <p className="text-muted-foreground mt-1">{filteredProjects.length} projects</p>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 md:gap-4">
                 <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-40">
+                  <SelectTrigger className="w-32 md:w-40">
                     <SelectValue placeholder="Sort by" />
                   </SelectTrigger>
                   <SelectContent>
@@ -141,16 +143,19 @@ const Projects = () => {
             />
           </div>
 
+
           {/* Projects Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
             {filteredProjects.map((project) => (
               <Card key={project.id} className="group hover:shadow-medium transition-all duration-300 border-0 shadow-soft">
                 {/* Project Image */}
                 <div className="relative overflow-hidden rounded-t-lg bg-muted aspect-[4/3]">
-                  <img 
+                  <img
                     src={constructionHero}
                     alt={project.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    loading="lazy"
+                    decoding="async"
                   />
                   <div className="absolute top-3 left-3 flex gap-2">
                     {project.status === 'active' && (
@@ -172,7 +177,7 @@ const Projects = () => {
                           <Eye className="h-4 w-4 mr-2" />
                           View Details
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setSelectedProject(project)}>
+                        <DropdownMenuItem onClick={() => { setSelectedProject(project); setEditOpen(true); }}>
                           <Edit className="h-4 w-4 mr-2" />
                           Edit Project
                         </DropdownMenuItem>
@@ -237,12 +242,12 @@ const Projects = () => {
                           </span>
                         </div>
                       </div>
-                      
+
                       {/* Progress indicator */}
                       <div className="text-right">
                         <div className="text-xs text-muted-foreground mb-1">Progress</div>
                         <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
-                          <div 
+                          <div
                             className="h-full bg-primary transition-all duration-300"
                             style={{ width: `${project.progress || 0}%` }}
                           />
@@ -250,13 +255,33 @@ const Projects = () => {
                       </div>
                     </div>
 
-                    {/* Color variants (representing different phases/aspects) */}
-                    <div className="flex items-center gap-1 pt-2">
-                      <div className="w-3 h-3 rounded-full bg-primary border border-white shadow-sm" title="Planning"></div>
-                      <div className="w-3 h-3 rounded-full bg-success border border-white shadow-sm" title="Construction"></div>
-                      <div className="w-3 h-3 rounded-full bg-warning border border-white shadow-sm" title="Finishing"></div>
-                      <div className="w-3 h-3 rounded-full bg-muted border border-white shadow-sm" title="Inspection"></div>
-                    </div>
+                    {/* Dynamic phase indicators based on description ("phases: A, B, C") or defaults */}
+                    {(() => {
+                      const desc = project.description || '';
+                      const match = desc.match(/phases:\s*([^\n;]+)/i);
+                      const parsed = match ? match[1].split(',').map(s => s.trim()).filter(Boolean) : [];
+                      const phases = parsed.length > 0 ? parsed.slice(0, 8) : [
+                        'Planning','Construction','Finishing','Inspection'
+                      ];
+                      const progress = Math.max(0, Math.min(100, project.progress || 0));
+                      const segment = 100 / phases.length;
+                      const currentIdx = Math.min(phases.length - 1, Math.floor(progress / segment));
+                      return (
+                        <div className="flex items-center gap-1 pt-2">
+                          {phases.map((name: string, idx: number) => {
+                            const state = idx < currentIdx ? 'done' : idx === currentIdx ? 'current' : 'upcoming';
+                            const color = state === 'done' ? 'bg-success' : state === 'current' ? 'bg-primary' : 'bg-muted';
+                            return (
+                              <div
+                                key={idx}
+                                className={`w-3 h-3 rounded-full ${color} border border-white shadow-sm`}
+                                title={name}
+                              />
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </CardContent>
               </Card>
@@ -273,8 +298,10 @@ const Projects = () => {
           )}
 
           {selectedProject && (
-            <EditProjectDialog 
-              project={selectedProject} 
+            <EditProjectDialog
+              project={selectedProject}
+              open={editOpen}
+              onOpenChange={setEditOpen}
             />
           )}
         </main>

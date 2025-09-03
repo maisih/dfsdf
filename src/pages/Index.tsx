@@ -11,7 +11,6 @@ import WeatherWidget from "@/components/weather/WeatherWidget";
 import QuickActions from "@/components/dashboard/QuickActions";
 import RecentActivity from "@/components/dashboard/RecentActivity";
 import ProjectOverview from "@/components/dashboard/ProjectOverview";
-import AIInsights from "@/components/dashboard/AIInsights";
 
 const Index = () => {
   const { selectedProject } = useProject();
@@ -22,6 +21,7 @@ const Index = () => {
     totalExpenses: 0
   });
   const [activeTasks, setActiveTasks] = useState<any[]>([]);
+  const [taskSummary, setTaskSummary] = useState({ total: 0, completed: 0 });
 
   useEffect(() => {
     if (selectedProject) {
@@ -62,37 +62,32 @@ const Index = () => {
 
     try {
       // Load team members count
-      const { data: teamData } = await supabase
-        .from('team_members')
-        .select('id')
-        .eq('project_id', selectedProject.id);
+      const [teamRes, tasksRes, expensesRes, materialsRes, taskCostsRes, allTasksRes, completedTasksRes] = await Promise.all([
+        supabase.from('team_members').select('id').eq('project_id', selectedProject.id),
+        supabase.from('tasks').select('id').eq('project_id', selectedProject.id).neq('status', 'completed'),
+        supabase.from('expenses').select('amount').eq('project_id', selectedProject.id),
+        supabase.from('materials').select('quantity, unit_cost').eq('project_id', selectedProject.id),
+        supabase.from('tasks').select('cost').eq('project_id', selectedProject.id).not('cost', 'is', null),
+        supabase.from('tasks').select('id').eq('project_id', selectedProject.id),
+        supabase.from('tasks').select('id').eq('project_id', selectedProject.id).eq('status', 'completed')
+      ]);
 
-      // Load open tasks count
-      const { data: tasksData } = await supabase
-        .from('tasks')
-        .select('id')
-        .eq('project_id', selectedProject.id)
-        .neq('status', 'completed');
-
-      // Load expenses for budget calculation
-      const { data: expensesData } = await supabase
-        .from('expenses')
-        .select('amount')
-        .eq('project_id', selectedProject.id);
-
-      // Load materials cost for budget calculation
-      const { data: materialsData } = await supabase
-        .from('materials')
-        .select('quantity, unit_cost')
-        .eq('project_id', selectedProject.id);
+      const teamData = teamRes.data;
+      const tasksData = tasksRes.data;
+      const expensesData = expensesRes.data;
+      const materialsData = materialsRes.data;
+      const taskCostsData = taskCostsRes.data;
+      const allTasksData = allTasksRes.data;
+      const completedTasksData = completedTasksRes.data;
 
       const totalExpenses = expensesData?.reduce((sum, expense) => sum + (expense.amount || 0), 0) || 0;
       const totalMaterialsCost = materialsData?.reduce((sum, material) => {
         const materialCost = (material.quantity || 0) * (material.unit_cost || 0);
         return sum + materialCost;
       }, 0) || 0;
-      
-      const totalSpent = totalExpenses + totalMaterialsCost;
+      const totalTaskCosts = taskCostsData?.reduce((sum, task) => sum + (task.cost || 0), 0) || 0;
+
+      const totalSpent = totalExpenses + totalMaterialsCost + totalTaskCosts;
       const budgetUtilization = selectedProject.budget > 0 ? Math.round((totalSpent / selectedProject.budget) * 100) : 0;
 
       setStats({
@@ -101,6 +96,10 @@ const Index = () => {
         budgetUtilization,
         totalExpenses: totalSpent
       });
+
+      const totalTasks = allTasksData?.length || 0;
+      const completedTasks = completedTasksData?.length || 0;
+      setTaskSummary({ total: totalTasks, completed: completedTasks });
     } catch (error) {
       console.error('Error loading project stats:', error);
     }
@@ -126,11 +125,11 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <div className="flex">
-        <div className="fixed left-0 top-16 h-[calc(100vh-4rem)] bg-gradient-surface border-r border-border shadow-soft overflow-y-auto">
+        <div className="hidden md:block fixed left-0 top-16 h-[calc(100vh-4rem)] bg-gradient-surface border-r border-border shadow-soft overflow-y-auto">
           <Sidebar />
         </div>
-        
-        <main className="flex-1 ml-64 p-6 space-y-6">
+
+        <main className="flex-1 md:ml-64 ml-0 p-4 md:p-6 pb-24 space-y-6">
           {!selectedProject ? (
             <div className="text-center py-20">
               <Building2 className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
@@ -142,10 +141,12 @@ const Index = () => {
               {/* Project Header */}
               <div className="relative overflow-hidden rounded-xl bg-gradient-primary shadow-medium">
                 <div className="absolute inset-0 bg-black/20"></div>
-                <img 
-                  src={constructionHero} 
-                  alt="Construction site overview" 
+                <img
+                  src={constructionHero}
+                  alt="Construction site overview"
                   className="absolute inset-0 w-full h-full object-cover mix-blend-overlay"
+                  decoding="async"
+                  fetchpriority="high"
                 />
                 <div className="relative p-8 text-white">
                   <h1 className="text-3xl font-bold mb-2">{selectedProject.name}</h1>
@@ -173,11 +174,38 @@ const Index = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <Card className="shadow-soft">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">Project Progress</CardTitle>
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Task Timeline</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-foreground mb-2">{selectedProject.progress || 0}%</div>
-                    <Progress value={selectedProject.progress || 0} className="h-2" />
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="text-2xl font-bold text-foreground">
+                        {taskSummary.completed}/{taskSummary.total}
+                      </div>
+                      <div className="text-xs text-muted-foreground">completed</div>
+                    </div>
+                    <div className="relative h-3 w-full rounded-full bg-muted overflow-hidden">
+                      <div
+                        className="absolute left-0 top-0 h-full bg-success transition-all duration-500"
+                        style={{ width: `${taskSummary.total ? Math.min(100, Math.round((taskSummary.completed / taskSummary.total) * 100)) : 0}%` }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent pointer-events-none" />
+                      {/* Tick marks */}
+                      {Array.from({ length: Math.min(taskSummary.total || 0, 8) }).map((_, i) => (
+                        <div
+                          key={i}
+                          className="absolute top-0 bottom-0 w-px bg-white/30"
+                          style={{ left: `${((i + 1) / Math.min(taskSummary.total || 1, 8)) * 100}%` }}
+                        />
+                      ))}
+                    </div>
+                    {activeTasks.length > 0 && (
+                      <div className="mt-3 text-xs text-muted-foreground">
+                        Next up: <span className="text-foreground font-medium">{activeTasks[0].title}</span>
+                        {activeTasks[0].due_date && (
+                          <span> · due {new Date(activeTasks[0].due_date).toLocaleDateString()}</span>
+                        )}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 
@@ -224,82 +252,80 @@ const Index = () => {
                 </Card>
               </div>
 
-              {/* Weather and Budget Overview */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Weather + Right Column */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                {/* Left: Weather */}
                 <WeatherWidget />
-                
-                {/* Budget Breakdown */}
-                <Card className="shadow-soft">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <DollarSign className="h-5 w-5" />
-                      Budget Overview
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 gap-4">
-                      <div>
-                        <div className="text-sm text-muted-foreground">Total Budget</div>
-                        <div className="text-2xl font-bold text-foreground">
-                          {selectedProject.budget?.toLocaleString() || '0'} MAD
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-sm text-muted-foreground">Spent</div>
-                        <div className="text-2xl font-bold text-foreground">
-                          {stats.totalExpenses.toLocaleString()} MAD
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-sm text-muted-foreground">Remaining</div>
-                        <div className="text-2xl font-bold text-foreground">
-                          {selectedProject.budget 
-                            ? (selectedProject.budget - stats.totalExpenses).toLocaleString()
-                            : '0'
-                          } MAD
-                        </div>
-                      </div>
-                    </div>
-                    <div className="mt-4">
-                      <Progress value={stats.budgetUtilization} className="h-3" />
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
 
-              {/* Active Tasks */}
-              <Card className="shadow-soft">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <AlertTriangle className="h-5 w-5" />
-                    Current Working Tasks
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {activeTasks.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-8">No active tasks found</p>
-                  ) : (
-                    <div className="space-y-4">
-                      {activeTasks.map((task) => (
-                        <div key={task.id} className="flex items-center justify-between p-4 bg-muted/20 rounded-lg">
-                          <div>
-                            <h4 className="font-medium text-foreground">{task.title}</h4>
-                            <p className="text-sm text-muted-foreground">{task.description}</p>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-sm font-medium text-foreground capitalize">
-                              {task.status.replace('_', ' ')}
+                {/* Right: Tasks then Compact Budget */}
+                <div className="space-y-6">
+                  {/* Active Tasks */}
+                  <Card className="shadow-soft">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <AlertTriangle className="h-5 w-5" />
+                        Current Working Tasks
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {activeTasks.length === 0 ? (
+                        <p className="text-center text-muted-foreground py-8">No active tasks found</p>
+                      ) : (
+                        <div className="space-y-4">
+                          {activeTasks.map((task) => (
+                            <div key={task.id} className="flex items-center justify-between p-4 bg-muted/20 rounded-lg">
+                              <div>
+                                <h4 className="font-medium text-foreground">{task.title}</h4>
+                                <p className="text-sm text-muted-foreground">{task.description}</p>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-sm font-medium text-foreground capitalize">
+                                  {task.status.replace('_', ' ')}
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No deadline'}
+                                </div>
+                              </div>
                             </div>
-                            <div className="text-xs text-muted-foreground">
-                              {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No deadline'}
-                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Compact Budget Overview */}
+                  <Card className="shadow-soft">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                        <DollarSign className="h-4 w-4" /> Budget Overview
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-3 gap-4 items-end">
+                        <div>
+                          <div className="text-xs text-muted-foreground">Total</div>
+                          <div className="text-base font-semibold text-foreground">
+                            {selectedProject.budget?.toLocaleString() || '0'} MAD
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                        <div>
+                          <div className="text-xs text-muted-foreground">Spent</div>
+                          <div className="text-base font-semibold text-foreground">
+                            {stats.totalExpenses.toLocaleString()} MAD
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-xs text-muted-foreground">Utilization</div>
+                          <div className="text-base font-semibold text-foreground">{stats.budgetUtilization}%</div>
+                        </div>
+                      </div>
+                      <div className="mt-3">
+                        <Progress value={stats.budgetUtilization} className="h-2" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
 
               {/* Project Timeline */}
               <Card className="shadow-soft">
@@ -314,7 +340,7 @@ const Index = () => {
                     <div>
                       <div className="text-sm text-muted-foreground">Start Date</div>
                       <div className="text-lg font-semibold text-foreground">
-                        {selectedProject.start_date 
+                        {selectedProject.start_date
                           ? new Date(selectedProject.start_date).toLocaleDateString()
                           : 'Not set'
                         }
@@ -323,11 +349,11 @@ const Index = () => {
                     <div>
                       <div className="text-sm text-muted-foreground">Expected End Date</div>
                       <div className={`text-lg font-semibold ${
-                        getDaysUntilDeadline() !== null && getDaysUntilDeadline()! < 0 
-                          ? 'text-destructive' 
+                        getDaysUntilDeadline() !== null && getDaysUntilDeadline()! < 0
+                          ? 'text-destructive'
                           : 'text-foreground'
                       }`}>
-                        {selectedProject.end_date 
+                        {selectedProject.end_date
                           ? new Date(selectedProject.end_date).toLocaleDateString()
                           : 'Not set'
                         }
@@ -336,6 +362,7 @@ const Index = () => {
                   </div>
                 </CardContent>
               </Card>
+
             </>
           )}
         </main>

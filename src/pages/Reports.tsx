@@ -6,7 +6,7 @@ import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
 import AddReportDialog from "@/components/dialogs/AddReportDialog";
 import { useProject } from "@/contexts/ProjectContext";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 const Reports = () => {
@@ -70,6 +70,32 @@ const Reports = () => {
       description: "Opening report scheduling interface...",
     });
   };
+
+  const aiOptimization = useMemo(() => {
+    if (!selectedProject) return null;
+    try {
+      const raw = localStorage.getItem(`ai_cost_optimization:${selectedProject.id}`);
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  }, [selectedProject]);
+
+  const exportAICostOptimization = () => {
+    if (!aiOptimization) return;
+    const { projectName, generatedAt, optimization, costMetrics } = aiOptimization;
+    const md = `# AI Cost Optimization Report\n\nProject: ${projectName}\nGenerated: ${new Date(generatedAt).toLocaleString()}\n\n## Summary Metrics\n- Total Budget: ${costMetrics.totalBudget}\n- Spent: ${costMetrics.spent}\n- Remaining: ${costMetrics.remaining}\n- Projected Overrun: ${costMetrics.projectedOverrun}\n\n## Recommendations\n\n${optimization}`;
+    const blob = new Blob([md], { type: 'text/markdown;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const nameSafe = (projectName || 'project').replace(/[^a-z0-9-_]/gi, '_');
+    a.download = `AI_Cost_Optimization_${nameSafe}_${new Date(generatedAt).toISOString().slice(0,10)}.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Available":
@@ -123,17 +149,23 @@ const Reports = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <div className="flex">
-        <Sidebar />
-        <main className="flex-1 p-6">
-          <div className="flex justify-between items-center mb-6">
+        <div className="hidden md:block fixed left-0 top-16 h-[calc(100vh-4rem)] bg-gradient-surface border-r border-border shadow-soft overflow-y-auto">
+          <Sidebar />
+        </div>
+        <main className="flex-1 md:ml-64 ml-0 p-4 md:p-6 pb-24">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
             <div>
               <h1 className="text-3xl font-bold text-foreground">Reports</h1>
               <p className="text-muted-foreground">Generate and manage project reports</p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <Button variant="outline" onClick={handleScheduleReport}>
                 <Clock className="h-4 w-4 mr-1" />
                 Schedule Report
+              </Button>
+              <Button variant="outline" className="gap-2" onClick={exportAICostOptimization} disabled={!aiOptimization}>
+                <Download className="h-4 w-4" />
+                Export AI Cost Optimization
               </Button>
               <Button className="gap-2" onClick={() => setShowAddDialog(true)}>
                 <Plus className="h-4 w-4" />

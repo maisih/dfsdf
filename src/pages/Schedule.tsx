@@ -17,14 +17,17 @@ const Schedule = () => {
   const [tasks, setTasks] = useState<any[]>([]);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [eventsSupported, setEventsSupported] = useState(true);
 
   useEffect(() => {
     if (selectedProject) {
       loadTasks();
+      loadEvents();
     } else {
       setTasks([]);
+      setEvents([]);
     }
-  }, [selectedProject]);
+  }, [selectedProject, currentDate]);
 
   const loadTasks = async () => {
     if (!selectedProject) return;
@@ -44,8 +47,8 @@ const Schedule = () => {
     }
   };
 
-  const handleEventAdded = (newEvent: any) => {
-    setEvents([...events, { ...newEvent, id: Date.now() }]);
+  const handleEventAdded = (_newEvent: any) => {
+    loadEvents();
   };
 
   const getEventTypeColor = (type: string) => {
@@ -70,6 +73,32 @@ const Schedule = () => {
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
   const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
+
+  const loadEvents = async () => {
+    if (!selectedProject) return;
+    try {
+      const { data, error } = await (supabase as any)
+        .from('events' as any)
+        .select('*')
+        .eq('project_id', selectedProject.id)
+        .gte('date', monthStart.toISOString())
+        .lte('date', monthEnd.toISOString())
+        .order('date', { ascending: true });
+      if (error) throw error;
+      setEventsSupported(true);
+      setEvents(data || []);
+    } catch (error: any) {
+      const msg = error?.message || JSON.stringify(error);
+      // 42P01 = undefined_table, or generic "does not exist"
+      if (msg.includes('42P01') || msg.toLowerCase().includes('does not exist')) {
+        setEventsSupported(false);
+        console.warn('Events table not configured; hiding events feature.');
+      } else {
+        console.error('Error loading events:', msg);
+      }
+      setEvents([]);
+    }
+  };
 
   const getEventsForDay = (day: Date) => {
     const dayEvents = events.filter(event => isSameDay(new Date(event.date), day));
@@ -102,17 +131,21 @@ const Schedule = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <div className="flex">
-        <Sidebar />
-        <main className="flex-1 p-6">
-          <div className="flex justify-between items-center mb-6">
+        <div className="hidden md:block fixed left-0 top-16 h-[calc(100vh-4rem)] bg-gradient-surface border-r border-border shadow-soft overflow-y-auto">
+          <Sidebar />
+        </div>
+        <main className="flex-1 md:ml-64 ml-0 p-4 md:p-6 pb-24">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
             <div>
               <h1 className="text-3xl font-bold text-foreground">Project Schedule</h1>
               <p className="text-muted-foreground">Monthly calendar view with project events</p>
             </div>
-            <Button className="gap-2" onClick={() => setShowAddDialog(true)}>
-              <Plus className="h-4 w-4" />
-              Add Event
-            </Button>
+            {eventsSupported && (
+              <Button className="gap-2" onClick={() => setShowAddDialog(true)}>
+                <Plus className="h-4 w-4" />
+                Add Event
+              </Button>
+            )}
           </div>
 
           {!selectedProject ? (
@@ -199,11 +232,11 @@ const Schedule = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <CalendarIcon className="h-5 w-5" />
-                    This Month Events
+                    {eventsSupported ? 'This Month Events' : 'This Month Tasks'}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {events.length === 0 && tasks.length === 0 ? (
+                  {(eventsSupported ? events.length === 0 : true) && tasks.length === 0 ? (
                     <div className="text-center py-8">
                       <CalendarIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                       <h3 className="text-lg font-semibold text-foreground mb-2">No Events Scheduled</h3>
@@ -245,7 +278,7 @@ const Schedule = () => {
                               {event.isTask && event.status && (
                                 <Badge variant="outline" className={
                                   event.status === 'completed' ? 'bg-success/10 text-success border-success/20' :
-                                  event.status === 'in_progress' ? 'bg-primary/10 text-primary border-primary/20' :
+                                  event.status === 'in-progress' ? 'bg-primary/10 text-primary border-primary/20' :
                                   'bg-warning/10 text-warning border-warning/20'
                                 }>
                                   {event.status}
@@ -273,11 +306,13 @@ const Schedule = () => {
             </div>
           )}
           
-          <AddEventDialog
-            open={showAddDialog}
-            onOpenChange={setShowAddDialog}
-            onEventAdded={handleEventAdded}
-          />
+          {eventsSupported && (
+            <AddEventDialog
+              open={showAddDialog}
+              onOpenChange={setShowAddDialog}
+              onEventAdded={handleEventAdded}
+            />
+          )}
         </main>
       </div>
     </div>

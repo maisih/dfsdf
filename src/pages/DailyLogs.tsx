@@ -52,9 +52,11 @@ const DailyLogs = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <div className="flex">
-        <Sidebar />
-        <main className="flex-1 p-6">
-          <div className="flex justify-between items-center mb-6">
+        <div className="hidden md:block fixed left-0 top-16 h-[calc(100vh-4rem)] bg-gradient-surface border-r border-border shadow-soft overflow-y-auto">
+          <Sidebar />
+        </div>
+        <main className="flex-1 md:ml-64 ml-0 p-4 md:p-6 pb-24">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
             <div>
               <h1 className="text-3xl font-bold text-foreground">Daily Logs</h1>
               <p className="text-muted-foreground">Track daily activities and progress</p>

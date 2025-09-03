@@ -7,7 +7,7 @@ import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
 import ExpenseForm from "@/components/forms/ExpenseForm";
 import { useProject } from "@/contexts/ProjectContext";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 const budgetData = [
@@ -65,11 +65,11 @@ const Budget = () => {
 
   const loadExpenses = async () => {
     if (!selectedProject) return;
-    
+
     setLoading(true);
     try {
-      // Load both expenses and task costs
-      const [expensesResult, tasksResult] = await Promise.all([
+      // Load expenses, task costs, and material costs
+      const [expensesResult, tasksResult, materialsResult] = await Promise.all([
         supabase
           .from('expenses')
           .select('*')
@@ -79,27 +79,43 @@ const Budget = () => {
           .from('tasks')
           .select('id, title, cost, due_date, status')
           .eq('project_id', selectedProject.id)
-          .not('cost', 'is', null)
+          .not('cost', 'is', null),
+        supabase
+          .from('materials')
+          .select('id, name, quantity, unit_cost, delivered_at, supplier')
+          .eq('project_id', selectedProject.id)
       ]);
-      
+
       if (expensesResult.error) throw expensesResult.error;
       if (tasksResult.error) throw tasksResult.error;
-      
-      setExpenses(expensesResult.data || []);
-      
-      // Add task costs to expenses for display
+      if (materialsResult.error) throw materialsResult.error;
+
+      const baseExpenses = expensesResult.data || [];
+
+      // Task costs as expenses
       const taskExpenses = (tasksResult.data || []).map(task => ({
         id: `task-${task.id}`,
         category: 'Task Cost',
         description: task.title,
-        amount: task.cost,
+        amount: Number(task.cost) || 0,
         expense_date: task.due_date || new Date().toISOString().split('T')[0],
         isTask: true
       }));
-      
-      setExpenses([...expensesResult.data || [], ...taskExpenses]);
+
+      // Material costs as expenses (quantity * unit_cost)
+      const materialExpenses = (materialsResult.data || []).map((m) => ({
+        id: `material-${m.id}`,
+        category: 'Materials',
+        description: `${m.name}${m.unit_cost ? ` @ ${m.unit_cost} per unit` : ''}`,
+        amount: m.unit_cost ? Number(m.unit_cost) * Number(m.quantity || 0) : 0,
+        expense_date: m.delivered_at || new Date().toISOString().split('T')[0],
+        isMaterial: true
+      }));
+
+      setExpenses([...baseExpenses, ...taskExpenses, ...materialExpenses]);
     } catch (error) {
       console.error('Error loading expenses:', error);
+      setExpenses([]);
     } finally {
       setLoading(false);
     }
@@ -127,20 +143,48 @@ const Budget = () => {
     return <TrendingDown className="h-4 w-4 text-success" />;
   };
 
+  const expenseFormRef = useRef<HTMLDivElement | null>(null);
+  const scrollToExpenseForm = () => {
+    expenseFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setTimeout(() => {
+      const amt = document.getElementById('amount') as HTMLInputElement | null;
+      amt?.focus();
+    }, 400);
+  };
+
+  const exportReport = () => {
+    const headers = ['Category', 'Description', 'Amount (MAD)', 'Date'];
+    const rows = expenses.map(e => [e.category || '', (e.description || '').replace(/\n|\r/g, ' '), String(e.amount || 0), new Date(e.expense_date).toLocaleDateString()]);
+    const totals = ['TOTAL', '', String(totalSpent), ''];
+    const csv = [headers, ...rows, totals].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const nameSafe = (selectedProject?.name || 'project').replace(/[^a-z0-9-_]/gi, '_');
+    a.href = url;
+    a.download = `budget-report_${nameSafe}_${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
       <div className="flex">
-        <Sidebar />
-        <main className="flex-1 p-6">
-          <div className="flex justify-between items-center mb-6">
+        <div className="hidden md:block fixed left-0 top-16 h-[calc(100vh-4rem)] bg-gradient-surface border-r border-border shadow-soft overflow-y-auto">
+          <Sidebar />
+        </div>
+        <main className="flex-1 md:ml-64 ml-0 p-4 md:p-6 pb-24">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
             <div>
               <h1 className="text-3xl font-bold text-foreground">Budget</h1>
               <p className="text-muted-foreground">Monitor project costs and financial performance</p>
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline">Export Report</Button>
-              <Button>Add Expense</Button>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Button variant="outline" onClick={exportReport}>Export Report</Button>
+              <Button onClick={scrollToExpenseForm}>Add Expense</Button>
             </div>
           </div>
 
@@ -226,7 +270,9 @@ const Budget = () => {
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Expense Form */}
-                <ExpenseForm />
+                <div ref={expenseFormRef}>
+                  <ExpenseForm onCreated={loadExpenses} />
+                </div>
 
                 {/* Recent Expenses */}
                 <Card className="shadow-soft">

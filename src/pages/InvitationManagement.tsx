@@ -5,11 +5,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { InvitationCodeManager } from "@/components/admin/InvitationCodeManager";
 import { ActiveSessionManager } from "@/components/admin/ActiveSessionManager";
 import { InvitationStatsCard } from "@/components/admin/InvitationStatsCard";
-import { Shield, AlertTriangle, Users, Key } from "lucide-react";
+import { Shield, AlertTriangle, Users, Key, ArrowLeft } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 export default function InvitationManagement() {
   const { user, loading } = useInvitationAuth();
+  const navigate = useNavigate();
 
   if (loading) {
     return (
@@ -19,7 +22,7 @@ export default function InvitationManagement() {
     );
   }
 
-  if (!user || user.role !== 'engineer') {
+  if (!user || (user.role !== 'engineer' && user.role !== 'admin')) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <Card className="max-w-md w-full">
@@ -29,7 +32,7 @@ export default function InvitationManagement() {
               Access Denied
             </CardTitle>
             <CardDescription>
-              You need engineer privileges to access invitation management.
+              You need engineer or admin privileges to access invitation management.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -54,6 +57,10 @@ export default function InvitationManagement() {
             Manage invitation codes and monitor system access
           </p>
         </div>
+        <Button variant="outline" onClick={() => navigate('/')}>
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Dashboard
+        </Button>
       </div>
 
       <InvitationStatsCard />

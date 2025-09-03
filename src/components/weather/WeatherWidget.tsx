@@ -1,6 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { 
   Cloud, 
   Sun, 
@@ -12,14 +11,10 @@ import {
   Thermometer,
   AlertTriangle,
   CheckCircle,
-  Brain,
-  Loader2,
   MapPin
 } from "lucide-react";
 import { useProject } from "@/contexts/ProjectContext";  
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 
 interface WeatherData {
   date: string;
@@ -34,65 +29,70 @@ const WeatherWidget = () => {
   const { selectedProject } = useProject();
   const [weatherData, setWeatherData] = useState<WeatherData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [aiAnalysis, setAiAnalysis] = useState<string>("");
-  const [riskFactors, setRiskFactors] = useState<any>(null);
-  const [aiLoading, setAiLoading] = useState(false);
-  const { toast } = useToast();
 
-  // Mock weather data for Morocco cities (in a real app, you'd use an actual weather API)
-  const generateMockWeather = (city: string): WeatherData[] => {
-    const conditions = ['Sunny', 'Partly Cloudy', 'Cloudy', 'Light Rain', 'Clear', 'Heavy Rain', 'Storm'];
-    const baseTemp = city === 'Casablanca' ? 20 : city === 'Marrakech' ? 25 : 18;
-    
-    return Array.from({ length: 7 }, (_, i) => {
-      const date = new Date();
-      date.setDate(date.getDate() + i);
-      
+  const weatherCodeToCondition = (code: number): string => {
+    if ([0].includes(code)) return 'Clear';
+    if ([1,2,3].includes(code)) return 'Partly Cloudy';
+    if ([45,48].includes(code)) return 'Fog';
+    if ([51,53,55,56,57].includes(code)) return 'Drizzle';
+    if ([61,63,65,80,81,82].includes(code)) return 'Rain';
+    if ([66,67].includes(code)) return 'Freezing Rain';
+    if ([71,73,75,77,85,86].includes(code)) return 'Snow';
+    if ([95,96,99].includes(code)) return 'Storm';
+    return 'Cloudy';
+  };
+
+  const fetchAccurateWeather = async (city: string): Promise<WeatherData[]> => {
+    const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1`);
+    const geo = await geoRes.json();
+    const lat = geo?.results?.[0]?.latitude;
+    const lon = geo?.results?.[0]?.longitude;
+    if (lat == null || lon == null) return [];
+
+    const params = new URLSearchParams({
+      latitude: String(lat),
+      longitude: String(lon),
+      timezone: 'auto',
+      daily: 'weathercode,temperature_2m_max,temperature_2m_min,windspeed_10m_max',
+      hourly: 'relative_humidity_2m'
+    });
+    const wxRes = await fetch(`https://api.open-meteo.com/v1/forecast?${params.toString()}`);
+    const wx = await wxRes.json();
+
+    const days: WeatherData[] = (wx?.daily?.time || []).slice(0,5).map((isoDate: string, idx: number) => {
+      const dateObj = new Date(isoDate);
+      let humidity = 0;
+      if (wx?.hourly?.time && wx?.hourly?.relative_humidity_2m) {
+        const target = new Date(isoDate); target.setHours(12,0,0,0);
+        let bestDiff = Infinity; let bestHum = 0;
+        for (let i=0;i<wx.hourly.time.length;i++) {
+          const t = new Date(wx.hourly.time[i]);
+          if (t.toDateString() !== dateObj.toDateString()) continue;
+          const diff = Math.abs(t.getTime() - target.getTime());
+          if (diff < bestDiff) { bestDiff = diff; bestHum = wx.hourly.relative_humidity_2m[i] ?? 0; }
+        }
+        humidity = bestHum;
+      }
+
+      const tmax = wx?.daily?.temperature_2m_max?.[idx] ?? 0;
+      const tmin = wx?.daily?.temperature_2m_min?.[idx] ?? 0;
+      const wind = wx?.daily?.windspeed_10m_max?.[idx] ?? 0;
+      const code = wx?.daily?.weathercode?.[idx] ?? 3;
+      const condition = weatherCodeToCondition(code);
+
       return {
-        date: date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
-        temperature: baseTemp + Math.floor(Math.random() * 10) - 5,
-        condition: conditions[Math.floor(Math.random() * conditions.length)],
-        humidity: 50 + Math.floor(Math.random() * 30),
-        windSpeed: 5 + Math.floor(Math.random() * 25),
-        icon: conditions[Math.floor(Math.random() * conditions.length)]
+        date: dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
+        temperature: Math.round((tmax + tmin) / 2),
+        condition,
+        humidity: Math.round(humidity),
+        windSpeed: Math.round(wind),
+        icon: condition
       };
     });
+
+    return days;
   };
 
-  const analyzeWeatherRisks = async () => {
-    if (!selectedProject || !weatherData.length) return;
-
-    setAiLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('ai-weather-analyzer', {
-        body: { 
-          weatherData,
-          projectLocation: selectedProject.location || 'Construction Site',
-          projectType: 'construction'
-        }
-      });
-
-      if (error) throw error;
-
-      setAiAnalysis(data.analysis);
-      setRiskFactors(data.riskFactors);
-
-      toast({
-        title: "Weather Analysis Complete",
-        description: `AI analyzed ${data.totalDays} days of weather with ${data.workableDays} workable days identified.`
-      });
-
-    } catch (error) {
-      console.error('Weather analysis error:', error);
-      toast({
-        title: "Error",
-        description: "Failed to analyze weather risks. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setAiLoading(false);
-    }
-  };
 
   const getRiskColor = (risk: string) => {
     switch (risk) {
@@ -125,17 +125,23 @@ const WeatherWidget = () => {
   };
 
   useEffect(() => {
-    if (selectedProject?.location) {
+    let aborted = false;
+    const run = async () => {
+      if (!selectedProject?.location) {
+        setWeatherData([]); setLoading(false); return;
+      }
       setLoading(true);
-      // Simulate API call delay
-      setTimeout(() => {
-        setWeatherData(generateMockWeather(selectedProject.location));
-        setLoading(false);
-      }, 1000);
-    } else {
-      setWeatherData([]);
-      setLoading(false);
-    }
+      try {
+        const data = await fetchAccurateWeather(selectedProject.location);
+        if (!aborted) setWeatherData(data);
+      } catch {
+        if (!aborted) setWeatherData([]);
+      } finally {
+        if (!aborted) setLoading(false);
+      }
+    };
+    run();
+    return () => { aborted = true; };
   }, [selectedProject]);
 
   return (
@@ -143,7 +149,7 @@ const WeatherWidget = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Cloud className="h-5 w-5" />
-          Weather Forecast & AI Risk Analysis
+          Weather Forecast
         </CardTitle>
         {selectedProject?.location && (
           <div className="flex items-center gap-1 text-sm text-muted-foreground">
@@ -169,61 +175,6 @@ const WeatherWidget = () => {
           </div>
         ) : (
           <div className="space-y-4">
-            {/* AI Analysis Button and Risk Summary */}
-            <div className="flex gap-2 mb-4">
-              <Button 
-                onClick={analyzeWeatherRisks} 
-                disabled={aiLoading}
-                size="sm"
-                className="flex-1"
-              >
-                {aiLoading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Analyzing...
-                  </>
-                ) : (
-                  <>
-                    <Brain className="h-4 w-4 mr-2" />
-                    AI Weather Risk Analysis
-                  </>
-                )}
-              </Button>
-            </div>
-
-            {riskFactors && (
-              <div className="grid grid-cols-2 gap-2 p-3 bg-muted rounded-lg mb-4">
-                <div className="flex items-center gap-2">
-                  <Wind className="h-4 w-4" />
-                  <span className="text-xs">Wind:</span>
-                  <Badge variant={getRiskColor(riskFactors.windRisk)} className="text-xs">
-                    {riskFactors.windRisk}
-                  </Badge>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CloudRain className="h-4 w-4" />
-                  <span className="text-xs">Rain:</span>
-                  <Badge variant={getRiskColor(riskFactors.rainRisk)} className="text-xs">
-                    {riskFactors.rainRisk}
-                  </Badge>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Thermometer className="h-4 w-4" />
-                  <span className="text-xs">Temperature:</span>
-                  <Badge variant={getRiskColor(riskFactors.temperatureRisk)} className="text-xs">
-                    {riskFactors.temperatureRisk}
-                  </Badge>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Droplets className="h-4 w-4" />
-                  <span className="text-xs">Humidity:</span>
-                  <Badge variant={getRiskColor(riskFactors.humidityRisk)} className="text-xs">
-                    {riskFactors.humidityRisk}
-                  </Badge>
-                </div>
-              </div>
-            )}
-
             {/* Weather Forecast */}
             <div className="space-y-3">
               {weatherData.slice(0, 5).map((day, index) => {
@@ -277,18 +228,6 @@ const WeatherWidget = () => {
               })}
             </div>
 
-            {/* AI Analysis Results */}
-            {aiAnalysis && (
-              <div className="mt-4 p-4 bg-muted rounded-lg">
-                <h4 className="font-semibold mb-2 flex items-center gap-2">
-                  <Brain className="h-4 w-4" />
-                  AI Weather Risk Analysis
-                </h4>
-                <div className="text-sm text-muted-foreground whitespace-pre-wrap max-h-60 overflow-y-auto">
-                  {aiAnalysis}
-                </div>
-              </div>
-            )}
           </div>
         )}
       </CardContent>

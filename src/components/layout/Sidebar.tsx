@@ -15,13 +15,16 @@ import {
   Shield
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useLocation, Link } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+import SmoothLink from "@/components/ui/smooth-link";
+import { memo } from "react";
+import { useInvitationAuth } from "@/contexts/InvitationAuthContext";
 
 interface SidebarProps {
   className?: string;
 }
 
-const navigation = [
+export const navigation = [
   {
     name: "Dashboard",
     icon: LayoutDashboard,
@@ -41,11 +44,6 @@ const navigation = [
     name: "Tasks",
     icon: CheckSquare,
     href: "/tasks",
-  },
-  {
-    name: "Daily Logs",
-    icon: ClipboardList,
-    href: "/logs",
   },
   {
     name: "Team",
@@ -78,11 +76,6 @@ const navigation = [
     href: "/documents",
   },
   {
-    name: "AI Assistant",
-    icon: Brain,
-    href: "/ai",
-  },
-  {
     name: "Admin",
     icon: Shield,
     href: "/admin",
@@ -91,13 +84,25 @@ const navigation = [
 
 const Sidebar = ({ className }: SidebarProps) => {
   const location = useLocation();
+  const { user } = useInvitationAuth();
+  const role = (user?.role || '').toLowerCase();
+
+  const visibleNav = navigation.filter((item) => {
+    if (role === 'worker') {
+      return item.href === '/reports';
+    }
+    if (item.href === '/admin') {
+      return role === 'admin' || role === 'engineer';
+    }
+    return true;
+  });
 
   return (
-    <div className={cn("pb-12 w-64", className)}>
+    <div className={cn("pb-12 w-64 hidden md:block", className)}>
       <div className="space-y-4 py-4">
         <div className="px-3 py-2">
           <div className="space-y-1">
-            {navigation.map((item) => {
+            {visibleNav.map((item) => {
               const isActive = location.pathname === item.href;
               return (
                 <Button
@@ -109,10 +114,10 @@ const Sidebar = ({ className }: SidebarProps) => {
                   )}
                   asChild
                 >
-                  <Link to={item.href}>
+                  <SmoothLink to={item.href}>
                     <item.icon className="h-4 w-4" />
                     {item.name}
-                  </Link>
+                  </SmoothLink>
                 </Button>
               );
             })}
@@ -123,4 +128,4 @@ const Sidebar = ({ className }: SidebarProps) => {
   );
 };
 
-export default Sidebar;
+export default memo(Sidebar);
