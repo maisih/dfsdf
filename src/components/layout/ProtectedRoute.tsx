@@ -1,4 +1,4 @@
-import { useInvitationAuth } from '@/contexts/InvitationAuthContext';
+import { useSecureAuth } from '@/contexts/SecureAuthContext';
 import { Navigate } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -7,7 +7,7 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { isAuthenticated, loading } = useInvitationAuth();
+  const { isAuthenticated, loading } = useSecureAuth();
 
   if (loading) {
     return (

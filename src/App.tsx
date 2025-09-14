@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ProjectProvider } from "@/contexts/ProjectContext";
 import { InvitationAuthProvider } from "@/contexts/InvitationAuthContext";
+import { SecureAuthProvider } from "@/contexts/SecureAuthContext";
 import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
 import AIAssistantBubble from "@/components/ai/AIAssistantBubble";
 import Index from "./pages/Index";
@@ -27,7 +28,7 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <InvitationAuthProvider>
+    <SecureAuthProvider>
       <ProjectProvider>
         <TooltipProvider>
           <Toaster />
@@ -57,7 +58,7 @@ const App = () => (
           </BrowserRouter>
         </TooltipProvider>
       </ProjectProvider>
-    </InvitationAuthProvider>
+    </SecureAuthProvider>
   </QueryClientProvider>
 );
 

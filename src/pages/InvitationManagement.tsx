@@ -1,15 +1,15 @@
 import { useState } from "react";
-import { useInvitationAuth } from "@/contexts/InvitationAuthContext";
+import { useSecureAuth } from "@/contexts/SecureAuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { InvitationCodeManager } from "@/components/admin/InvitationCodeManager";
-import { ActiveSessionManager } from "@/components/admin/ActiveSessionManager";
+import { SecureSessionManager } from "@/components/admin/SecureSessionManager";
 import { InvitationStatsCard } from "@/components/admin/InvitationStatsCard";
 import { Shield, AlertTriangle, Users, Key } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function InvitationManagement() {
-  const { user, loading } = useInvitationAuth();
+  const { user, loading } = useSecureAuth();
 
   if (loading) {
     return (
@@ -75,7 +75,7 @@ export default function InvitationManagement() {
         </TabsContent>
 
         <TabsContent value="sessions">
-          <ActiveSessionManager />
+          <SecureSessionManager />
         </TabsContent>
       </Tabs>
     </div>

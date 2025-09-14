@@ -1,128 +1,270 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useInvitationAuth } from '@/contexts/InvitationAuthContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, Building2, Shield, Key } from 'lucide-react';
+import { AlertCircle, Shield, Users, Clock } from 'lucide-react';
+import { useSecureAuth } from '@/contexts/SecureAuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function Auth() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [invitationCode, setInvitationCode] = useState('');
-  const { validateInvitation } = useInvitationAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [invitation, setInvitation] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState('invitation');
   const navigate = useNavigate();
+  const { validateInvitation, createAccount, signIn } = useSecureAuth();
   const { toast } = useToast();
 
-  const handleInvitationSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleInvitationValidation = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    setError(null);
+    setLoading(true);
+    setError('');
 
-    if (!invitationCode.trim()) {
-      setError('Please enter an invitation code');
-      setIsLoading(false);
-      return;
+    try {
+      const result = await validateInvitation(invitationCode);
+      if (result.success) {
+        setInvitation(result.invitation);
+        setActiveTab('register');
+        toast({
+          title: 'Invitation Valid',
+          description: `Ready to create your ${result.invitation.role} account.`,
+        });
+      } else {
+        setError(result.error || 'Invalid invitation code');
+        toast({
+          title: 'Invalid Invitation',
+          description: result.error || 'Please check your invitation code.',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      setError('Network error occurred. Please try again.');
+      toast({
+        title: 'Error',
+        description: 'Something went wrong. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
     }
+  };
 
-    const { success, error: validationError } = await validateInvitation(invitationCode.trim());
-    
-    if (success) {
+  const handleAccountCreation = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      const result = await createAccount(invitationCode, email, password, fullName);
+      if (result.success) {
+        navigate('/');
+      } else {
+        setError(result.error || 'Failed to create account');
+        toast({
+          title: 'Account Creation Failed',
+          description: result.error || 'Please try again.',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      setError('Network error occurred. Please try again.');
       toast({
-        title: "Access granted!",
-        description: "Welcome to Construction Manager.",
+        title: 'Error',
+        description: 'Something went wrong. Please try again.',
+        variant: 'destructive',
       });
-      navigate('/');
-    } else {
-      setError(validationError || 'Invalid invitation code');
-      toast({
-        variant: "destructive",
-        title: "Access denied",
-        description: validationError || 'Invalid invitation code',
-      });
+    } finally {
+      setLoading(false);
     }
-    
-    setIsLoading(false);
+  };
+
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      const result = await signIn(email, password);
+      if (result.success) {
+        navigate('/');
+      } else {
+        setError(result.error || 'Sign in failed');
+        toast({
+          title: 'Sign In Failed',
+          description: result.error || 'Please check your credentials.',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      setError('Network error occurred. Please try again.');
+      toast({
+        title: 'Error',
+        description: 'Something went wrong. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-4">
-            <div className="relative">
-              <Building2 className="h-12 w-12 text-primary" />
-              <Shield className="h-6 w-6 text-accent absolute -top-1 -right-1 bg-background rounded-full p-1" />
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl font-bold">SiteFlow Master</CardTitle>
+          <CardDescription>
+            Secure construction management platform
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="invitation">Invitation</TabsTrigger>
+              <TabsTrigger value="register" disabled={!invitation}>Register</TabsTrigger>
+              <TabsTrigger value="signin">Sign In</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="invitation" className="space-y-4">
+              <form onSubmit={handleInvitationValidation} className="space-y-4">
+                <div className="space-y-2">
+                  <Input
+                    type="text"
+                    placeholder="Enter invitation code"
+                    value={invitationCode}
+                    onChange={(e) => setInvitationCode(e.target.value)}
+                    disabled={loading}
+                    className="text-center font-mono"
+                  />
+                </div>
+                
+                <Button 
+                  type="submit" 
+                  className="w-full" 
+                  disabled={loading || !invitationCode.trim()}
+                >
+                  {loading ? 'Validating...' : 'Validate Invitation'}
+                </Button>
+              </form>
+            </TabsContent>
+            
+            <TabsContent value="register" className="space-y-4">
+              {invitation && (
+                <div className="text-sm text-center text-muted-foreground mb-4">
+                  Creating <span className="font-medium text-primary">{invitation.role}</span> account
+                </div>
+              )}
+              <form onSubmit={handleAccountCreation} className="space-y-4">
+                <Input
+                  type="text"
+                  placeholder="Full Name"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  disabled={loading}
+                  required
+                />
+                <Input
+                  type="email"
+                  placeholder="Email Address"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={loading}
+                  required
+                />
+                <Input
+                  type="password"
+                  placeholder="Create Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={loading}
+                  required
+                  minLength={6}
+                />
+                
+                <Button 
+                  type="submit" 
+                  className="w-full" 
+                  disabled={loading || !email || !password || !fullName}
+                >
+                  {loading ? 'Creating Account...' : 'Create Account'}
+                </Button>
+              </form>
+            </TabsContent>
+            
+            <TabsContent value="signin" className="space-y-4">
+              <form onSubmit={handleSignIn} className="space-y-4">
+                <Input
+                  type="email"
+                  placeholder="Email Address"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={loading}
+                  required
+                />
+                <Input
+                  type="password"
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={loading}
+                  required
+                />
+                
+                <Button 
+                  type="submit" 
+                  className="w-full" 
+                  disabled={loading || !email || !password}
+                >
+                  {loading ? 'Signing In...' : 'Sign In'}
+                </Button>
+              </form>
+            </TabsContent>
+          </Tabs>
+
+          <div className="mt-6 pt-6 border-t border-border">
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div className="flex flex-col items-center space-y-2">
+                <Shield className="h-6 w-6 text-primary" />
+                <div className="text-xs text-muted-foreground">
+                  <div className="font-medium">Secure Access</div>
+                  <div>Encrypted sessions</div>
+                </div>
+              </div>
+              <div className="flex flex-col items-center space-y-2">
+                <Users className="h-6 w-6 text-primary" />
+                <div className="text-xs text-muted-foreground">
+                  <div className="font-medium">Team Access</div>
+                  <div>Role-based</div>
+                </div>
+              </div>
+              <div className="flex flex-col items-center space-y-2">
+                <Clock className="h-6 w-6 text-primary" />
+                <div className="text-xs text-muted-foreground">
+                  <div className="font-medium">Auto-logout</div>
+                  <div>Security timeout</div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-4 text-center text-xs text-muted-foreground">
+              Need an invitation code? Contact your project administrator.
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-foreground">Construction Manager</h1>
-          <p className="text-muted-foreground mt-2">Secure access with invitation code</p>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2 mb-2">
-              <Key className="h-5 w-5 text-primary" />
-              <CardTitle>Secure Access</CardTitle>
-            </div>
-            <CardDescription>
-              Enter your invitation code to access the construction management system.
-              This ensures secure and authorized access to project data.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {error && (
-              <Alert variant="destructive" className="mb-4">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-
-            <form onSubmit={handleInvitationSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="invitation-code">Invitation Code</Label>
-                <Input
-                  id="invitation-code"
-                  name="invitationCode"
-                  type="text"
-                  placeholder="Enter your invitation code (e.g., ENG2024)"
-                  value={invitationCode}
-                  onChange={(e) => setInvitationCode(e.target.value.toUpperCase())}
-                  required
-                  disabled={isLoading}
-                  className="text-center text-lg font-mono"
-                  maxLength={20}
-                />
-              </div>
-              
-              <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
-                <div className="flex items-center gap-2 mb-2">
-                  <Shield className="h-4 w-4" />
-                  <strong>Security Features:</strong>
-                </div>
-                <ul className="space-y-1 text-xs">
-                  <li>• Encrypted session validation</li>
-                  <li>• Rate limiting protection</li>
-                  <li>• Browser fingerprint verification</li>
-                  <li>• Automatic session expiry</li>
-                </ul>
-              </div>
-
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? 'Validating...' : 'Access System'}
-              </Button>
-            </form>
-
-            <div className="mt-6 text-center text-sm text-muted-foreground">
-              <p>Need an invitation code?</p>
-              <p>Contact your project administrator.</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
