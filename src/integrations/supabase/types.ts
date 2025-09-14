@@ -14,8 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          created_at: string
+          event_details: Json | null
+          event_type: string
+          id: string
+          ip_address: unknown | null
+          session_id: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_details?: Json | null
+          event_type: string
+          id?: string
+          ip_address?: unknown | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_details?: Json | null
+          event_type?: string
+          id?: string
+          ip_address?: unknown | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "user_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       daily_logs: {
         Row: {
+          company_id: string | null
           created_at: string
           deliveries: string | null
           equipment_used: string | null
@@ -32,6 +74,7 @@ export type Database = {
           work_performed: string | null
         }
         Insert: {
+          company_id?: string | null
           created_at?: string
           deliveries?: string | null
           equipment_used?: string | null
@@ -48,6 +91,7 @@ export type Database = {
           work_performed?: string | null
         }
         Update: {
+          company_id?: string | null
           created_at?: string
           deliveries?: string | null
           equipment_used?: string | null
@@ -67,6 +111,7 @@ export type Database = {
       }
       documents: {
         Row: {
+          company_id: string | null
           created_at: string
           file_path: string
           file_size: number | null
@@ -79,6 +124,7 @@ export type Database = {
           version: number | null
         }
         Insert: {
+          company_id?: string | null
           created_at?: string
           file_path: string
           file_size?: number | null
@@ -91,6 +137,7 @@ export type Database = {
           version?: number | null
         }
         Update: {
+          company_id?: string | null
           created_at?: string
           file_path?: string
           file_size?: number | null
@@ -112,10 +159,58 @@ export type Database = {
           },
         ]
       }
+      events: {
+        Row: {
+          company_id: string | null
+          created_at: string | null
+          date: string
+          description: string | null
+          id: string
+          project_id: string
+          status: string | null
+          time: string | null
+          title: string
+          type: string | null
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string | null
+          date: string
+          description?: string | null
+          id?: string
+          project_id: string
+          status?: string | null
+          time?: string | null
+          title: string
+          type?: string | null
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string | null
+          date?: string
+          description?: string | null
+          id?: string
+          project_id?: string
+          status?: string | null
+          time?: string | null
+          title?: string
+          type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       expenses: {
         Row: {
           amount: number
           category: string
+          company_id: string | null
           created_at: string
           description: string | null
           expense_date: string | null
@@ -127,6 +222,7 @@ export type Database = {
         Insert: {
           amount: number
           category: string
+          company_id?: string | null
           created_at?: string
           description?: string | null
           expense_date?: string | null
@@ -138,6 +234,7 @@ export type Database = {
         Update: {
           amount?: number
           category?: string
+          company_id?: string | null
           created_at?: string
           description?: string | null
           expense_date?: string | null
@@ -159,8 +256,10 @@ export type Database = {
       invitation_codes: {
         Row: {
           code: string
+          company_id: string | null
           created_at: string
           created_by: string | null
+          created_user_id: string | null
           current_uses: number | null
           expires_at: string
           id: string
@@ -171,8 +270,10 @@ export type Database = {
         }
         Insert: {
           code: string
+          company_id?: string | null
           created_at?: string
           created_by?: string | null
+          created_user_id?: string | null
           current_uses?: number | null
           expires_at: string
           id?: string
@@ -183,8 +284,10 @@ export type Database = {
         }
         Update: {
           code?: string
+          company_id?: string | null
           created_at?: string
           created_by?: string | null
+          created_user_id?: string | null
           current_uses?: number | null
           expires_at?: string
           id?: string
@@ -197,6 +300,7 @@ export type Database = {
       }
       materials: {
         Row: {
+          company_id: string | null
           created_at: string
           delivered_at: string | null
           id: string
@@ -210,6 +314,7 @@ export type Database = {
           unit_cost: number | null
         }
         Insert: {
+          company_id?: string | null
           created_at?: string
           delivered_at?: string | null
           id?: string
@@ -223,6 +328,7 @@ export type Database = {
           unit_cost?: number | null
         }
         Update: {
+          company_id?: string | null
           created_at?: string
           delivered_at?: string | null
           id?: string
@@ -249,6 +355,7 @@ export type Database = {
         Row: {
           ai_analysis: Json | null
           caption: string | null
+          company_id: string | null
           created_at: string
           file_path: string
           id: string
@@ -260,6 +367,7 @@ export type Database = {
         Insert: {
           ai_analysis?: Json | null
           caption?: string | null
+          company_id?: string | null
           created_at?: string
           file_path: string
           id?: string
@@ -271,6 +379,7 @@ export type Database = {
         Update: {
           ai_analysis?: Json | null
           caption?: string | null
+          company_id?: string | null
           created_at?: string
           file_path?: string
           id?: string
@@ -306,32 +415,32 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
-          created_at: string
-          full_name: string
-          id: string
+          company_id: string | null
+          created_at: string | null
+          full_name: string | null
           phone: string | null
           role: Database["public"]["Enums"]["user_role"]
-          updated_at: string
+          updated_at: string | null
           user_id: string
         }
         Insert: {
           avatar_url?: string | null
-          created_at?: string
-          full_name: string
-          id?: string
+          company_id?: string | null
+          created_at?: string | null
+          full_name?: string | null
           phone?: string | null
-          role: Database["public"]["Enums"]["user_role"]
-          updated_at?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string | null
           user_id: string
         }
         Update: {
           avatar_url?: string | null
-          created_at?: string
-          full_name?: string
-          id?: string
+          company_id?: string | null
+          created_at?: string | null
+          full_name?: string | null
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
-          updated_at?: string
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
@@ -371,6 +480,7 @@ export type Database = {
       projects: {
         Row: {
           budget: number | null
+          company_id: string | null
           created_at: string
           created_by: string | null
           description: string | null
@@ -386,6 +496,7 @@ export type Database = {
         }
         Insert: {
           budget?: number | null
+          company_id?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -401,6 +512,7 @@ export type Database = {
         }
         Update: {
           budget?: number | null
+          company_id?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -418,6 +530,7 @@ export type Database = {
       }
       signals: {
         Row: {
+          company_id: string | null
           created_at: string
           description: string | null
           id: string
@@ -433,6 +546,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          company_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -448,6 +562,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          company_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -475,6 +590,7 @@ export type Database = {
       tasks: {
         Row: {
           assigned_to: string | null
+          company_id: string | null
           completed_at: string | null
           cost: number | null
           created_at: string
@@ -490,6 +606,7 @@ export type Database = {
         }
         Insert: {
           assigned_to?: string | null
+          company_id?: string | null
           completed_at?: string | null
           cost?: number | null
           created_at?: string
@@ -505,6 +622,7 @@ export type Database = {
         }
         Update: {
           assigned_to?: string | null
+          company_id?: string | null
           completed_at?: string | null
           cost?: number | null
           created_at?: string
@@ -530,6 +648,7 @@ export type Database = {
       }
       team_members: {
         Row: {
+          company_id: string | null
           created_at: string
           email: string | null
           id: string
@@ -542,6 +661,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          company_id?: string | null
           created_at?: string
           email?: string | null
           id?: string
@@ -554,6 +674,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          company_id?: string | null
           created_at?: string
           email?: string | null
           id?: string
@@ -567,11 +688,73 @@ export type Database = {
         }
         Relationships: []
       }
+      user_sessions: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          expires_at: string
+          fingerprint: string | null
+          id: string
+          invitation_code: string | null
+          ip_address: unknown | null
+          last_activity: string | null
+          revoked_at: string | null
+          role: Database["public"]["Enums"]["user_role"]
+          session_token: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          expires_at: string
+          fingerprint?: string | null
+          id?: string
+          invitation_code?: string | null
+          ip_address?: unknown | null
+          last_activity?: string | null
+          revoked_at?: string | null
+          role: Database["public"]["Enums"]["user_role"]
+          session_token: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          expires_at?: string
+          fingerprint?: string | null
+          id?: string
+          invitation_code?: string | null
+          ip_address?: unknown | null
+          last_activity?: string | null
+          revoked_at?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          session_token?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      cleanup_expired_sessions: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      create_user_from_invitation: {
+        Args: {
+          p_email: string
+          p_fingerprint?: string
+          p_full_name: string
+          p_invitation_code: string
+          p_password: string
+        }
+        Returns: Json
+      }
       get_invitation_role: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -583,6 +766,17 @@ export type Database = {
       get_user_role_safe: {
         Args: { user_uuid: string }
         Returns: Database["public"]["Enums"]["user_role"]
+      }
+      log_audit_event: {
+        Args: {
+          p_event_details?: Json
+          p_event_type: string
+          p_ip_address?: unknown
+          p_session_id: string
+          p_user_agent?: string
+          p_user_id: string
+        }
+        Returns: string
       }
     }
     Enums: {
